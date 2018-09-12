@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Alexandr Sitdikov</Authors>
+    <Company />
+    <Description>MonetDb .NET mapi provider</Description>
+    <Product>MonetDb.Mapi</Product>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Release\MonetDb.xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>

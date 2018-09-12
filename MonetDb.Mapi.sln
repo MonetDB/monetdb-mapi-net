@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2019
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{326E8004-2CBD-4721-A49E-E6D9A2681DB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonetDb.Mapi", "MonetDb.Mapi\MonetDb.Mapi.csproj", "{6604AE8F-58BD-4535-B545-FD531A9813DC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{326E8004-2CBD-4721-A49E-E6D9A2681DB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{326E8004-2CBD-4721-A49E-E6D9A2681DB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{326E8004-2CBD-4721-A49E-E6D9A2681DB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{326E8004-2CBD-4721-A49E-E6D9A2681DB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6604AE8F-58BD-4535-B545-FD531A9813DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6604AE8F-58BD-4535-B545-FD531A9813DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6604AE8F-58BD-4535-B545-FD531A9813DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6604AE8F-58BD-4535-B545-FD531A9813DC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {93094C20-3B02-4D01-A653-A8C1834E64D7}
+	EndGlobalSection
+EndGlobal

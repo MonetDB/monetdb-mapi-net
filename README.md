@@ -1,4 +1,4 @@
-monetdb-net is .NET Data Provider for MonetDb
+.NET Standart Data Provider for MonetDb based on https://github.com/shmutalov/monetdb-net
 
 Tests included.
 
