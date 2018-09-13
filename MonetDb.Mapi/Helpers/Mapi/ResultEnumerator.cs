@@ -16,6 +16,9 @@
     {
         private string _temp;
         private StreamReader _stream;
+#if DEBUG
+        private int count;
+#endif
 
         public ResultEnumerator(StreamReader stream)
         {
@@ -27,6 +30,9 @@
             while (_temp[0] == '[')
             {
                 yield return SplitDataInColumns(_temp);
+#if DEBUG
+                this.count++;
+#endif
                 _temp = _stream.ReadLine();
 
                 if (_temp == null)

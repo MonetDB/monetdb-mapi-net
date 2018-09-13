@@ -21,6 +21,7 @@ namespace MonetDb.Mapi
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics;
+    using System.IO;
     using MonetDb.Mapi.Helpers;
     using MonetDb.Mapi.Helpers.Mapi;
 
@@ -35,6 +36,7 @@ namespace MonetDb.Mapi
         private string _password;
         private int _minPoolConnections = 3;
         private int _maxPoolConnections = 20;
+        private int _currentReplySize = -1;
 
         private Socket _socket;
 
@@ -86,6 +88,8 @@ namespace MonetDb.Mapi
             return new MonetDbTransaction(this, isolationLevel);
         }
 
+        public int ReplySize { get; set; }
+
         /// <summary>
         /// Begins a database transaction.
         /// </summary>
@@ -126,10 +130,13 @@ namespace MonetDb.Mapi
         /// </summary>
         public void Close()
         {
-            if (_socket != null)
-                MonetDbConnectionFactory.CloseConnection(_socket, Database);
+            if (this._socket != null)
+            {
+                MonetDbConnectionFactory.CloseConnection(this._socket, this.Database);
+                this._socket = null;
+            }
 
-            State = ConnectionState.Closed;
+            this.State = ConnectionState.Closed;
         }
 
         private string _connectionString;
@@ -195,7 +202,7 @@ namespace MonetDb.Mapi
                 throw new InvalidOperationException("ConnectionString has not been set. Cannot connect to database.");
             }
 
-            _socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
+            this._socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
 
             State = ConnectionState.Open;
         }
@@ -329,10 +336,29 @@ namespace MonetDb.Mapi
 
         internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
         {
+            try
+            {
 #if TRACE
-            Debug.WriteLine(sql, "MonetDb");
+                Debug.WriteLine(sql, "MonetDb");
 #endif
-            return _socket.ExecuteSql(sql);
+                this.PrepareExecution();
+                return _socket.ExecuteSql(sql);
+            }
+            catch (IOException ex)
+            {
+                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
+                this._socket = null;
+                throw;
+            }
+        }
+
+        private void PrepareExecution()
+        {
+            if (this._currentReplySize != this.ReplySize)
+            {
+                this._socket.ExecuteControlSql("reply_size " + this.ReplySize);
+                this._currentReplySize = this.ReplySize;
+            }
         }
     }
 }

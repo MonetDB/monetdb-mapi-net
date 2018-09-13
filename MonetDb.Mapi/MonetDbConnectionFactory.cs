@@ -104,6 +104,19 @@ namespace MonetDb.Mapi
             pool.Free(socket);
         }
 
+        public static void RemoveConnection(Socket socket, string database)
+        {
+            var key = GetConnectionPoolKey(socket.Host, socket.Port, socket.Username, database);
+
+            ConnectionPool pool;
+            lock (ConnectionPools)
+            {
+                pool = ConnectionPools[key];
+            }
+
+            pool.Remove(socket);
+        }
+
         private static ConnectionPool GetPool(string host, int port, string username, string password, string database, int minConn, int maxConn)
         {
             var key = GetConnectionPoolKey(host, port, username, database);

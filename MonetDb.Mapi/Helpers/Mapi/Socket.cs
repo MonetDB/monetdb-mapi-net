@@ -120,12 +120,16 @@
         public void Dispose()
         {
             if (ToDatabase != null && _socket.Connected)
-                ToDatabase.Close();
+            {
+                this.ToDatabase.Close();
+            }
 
             if (FromDatabase != null && _socket.Connected)
-                FromDatabase.Close();
+            {
+                this.FromDatabase.Close();
+            }
 
-            _socket.Close();
+            this._socket.Close();
         }
 
         internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
@@ -134,6 +138,30 @@
             ToDatabase.Flush();
             var re = new ResultEnumerator(FromDatabase);
             return re.GetResults();
+        }
+
+        internal void ExecuteControlSql(string sql)
+        {
+            ToDatabase.Write("X" + sql + "\nX");
+            ToDatabase.Flush();
+
+            while (true)
+            {
+                var line = this.FromDatabase.ReadLine();
+                if (line == null)
+                {
+                    throw new IOException("Connection to server lost!");
+                }
+
+                switch ((byte)line[0])
+                {
+                    case (byte)DbLineType.Prompt:
+                        return;
+
+                    case (byte)DbLineType.Error:
+                        throw new MonetDbException(line.Substring(1));
+                }
+            }
         }
 
         /// <summary>

@@ -2,10 +2,10 @@
 {
     using System;
     using System.Data;
-    using System.Data.MonetDb;
     using System.Linq;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using MonetDb.Mapi;
 
     [TestClass()]
     public class UnitTest

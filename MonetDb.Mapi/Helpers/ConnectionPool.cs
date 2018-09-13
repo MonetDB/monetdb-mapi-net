@@ -7,7 +7,12 @@
 
     using MonetDb.Mapi.Helpers.Mapi;
 
-    public class ConnectionPool : IDisposable
+#if DEBUG
+    public
+#else
+        internal
+#endif
+        class ConnectionPool : IDisposable
     {
         private readonly object lockObj = new object();
         private readonly ConcurrentQueue<Socket> Active = new ConcurrentQueue<Socket>();
@@ -64,6 +69,17 @@
                 }
 
                 this.Active.Enqueue(socket);
+            }
+        }
+
+        public void Remove(Socket socket)
+        {
+            lock (this.lockObj)
+            {
+                if (!this.Busy.Remove(socket))
+                {
+                    throw new Exception("Socket is not busy");
+                }
             }
         }
 
