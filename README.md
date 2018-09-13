@@ -1,4 +1,4 @@
-.NET Standart Data Provider for MonetDb based on https://github.com/shmutalov/monetdb-net
+.NET Standart Data Provider for MonetDb
 
 Tests included.
 
