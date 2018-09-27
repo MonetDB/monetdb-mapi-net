@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
+    using System.Globalization;
     using System.Linq;
 
     using MonetDb.Mapi.Enums;
@@ -374,7 +375,7 @@
         /// <returns></returns>
         public override decimal GetDecimal(int i)
         {
-            return decimal.Parse(_enumerator.Current[i]);
+            return decimal.Parse(_enumerator.Current[i], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -384,7 +385,7 @@
         /// <returns></returns>
         public override double GetDouble(int i)
         {
-            return double.Parse(_enumerator.Current[i]);
+            return double.Parse(_enumerator.Current[i], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -394,7 +395,7 @@
         /// <returns></returns>
         public override float GetFloat(int i)
         {
-            return float.Parse(_enumerator.Current[i]);
+            return float.Parse(_enumerator.Current[i], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -424,7 +425,7 @@
         /// <returns></returns>
         public override int GetInt32(int i)
         {
-            return int.Parse(_enumerator.Current[i]);
+            return int.Parse(_enumerator.Current[i], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -434,7 +435,7 @@
         /// <returns></returns>
         public override long GetInt64(int i)
         {
-            return long.Parse(_enumerator.Current[i]);
+            return long.Parse(_enumerator.Current[i], CultureInfo.InvariantCulture);
         }
 
         /// <summary>
