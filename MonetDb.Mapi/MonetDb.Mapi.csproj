@@ -12,6 +12,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>database;DB;SQL;MonetDb</PackageTags>
     <Version>1.2</Version>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/LICENSE</PackageLicenseUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
