@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Data.Common;
     using System.Text;
 
     using MonetDb.Mapi.Helpers.Mapi;
@@ -10,14 +11,17 @@
     /// <summary>
     /// Represents an SQL command to send to a <c>MonetDbConnection</c>
     /// </summary>
-    public class MonetDbCommand : IDbCommand
+    public class MonetDbCommand : DbCommand
     {
+        private MonetDbConnection _connection;
+        private DbParameterCollection dbParameterCollection;
+
         /// <summary>
         /// Initializes a new command
         /// </summary>
-        public MonetDbCommand()
+        public MonetDbCommand() : base()
         {
-            _parameters = new MonetDbParameterCollection();
+            this.dbParameterCollection = new MonetDbParameterCollection();
         }
 
         /// <summary>
@@ -53,48 +57,48 @@
             Transaction = transaction;
         }
 
-        #region IDbCommand Members
+        /// <summary>
+        /// Gets or sets how command results are applied to the <c>DataRow</c> when used by the 
+        /// <c>Update</c> method of a <c>MonetDbDataAdapter</c>.
+        /// </summary>
+        public override UpdateRowSource UpdatedRowSource { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override string CommandText { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override int CommandTimeout { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override CommandType CommandType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override bool DesignTimeVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected override DbParameterCollection DbParameterCollection => this.dbParameterCollection;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected override DbTransaction DbTransaction { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <summary>
         /// Attempts to cancels the execution of this <c>MonetDbCommand</c>.
         /// </summary>
-        public void Cancel()
+        public override void Cancel()
         {
             throw new NotImplementedException("this is not implemented yet");
-        }
-
-        /// <summary>
-        /// Gets or sets the text command to run against the MonetDB server.
-        /// </summary>
-        public string CommandText { get; set; }
-
-        /// <summary>
-        /// Gets or sets the wait time before terminating the attempt to execute a command and generating an error.
-        /// </summary>
-        public int CommandTimeout { get; set; }
-
-        /// <summary>
-        /// Indicates or specifies how the <c>CommandText</c> property is interpreted.
-        /// </summary>
-        public CommandType CommandType { get; set; }
-
-        private MonetDbConnection _connection;
-        /// <summary>
-        /// Gets or sets the <c>IDbConnection</c> used by this instance of the <c>IDbCommand</c>.
-        /// </summary>
-        public IDbConnection Connection
-        {
-            get { return _connection; }
-            set { _connection = (MonetDbConnection)value; }
-        }
-
-        /// <summary>
-        /// Creates a new instance of an <c>IDbDataParameter</c> object.
-        /// </summary>
-        /// <returns></returns>
-        public IDbDataParameter CreateParameter()
-        {
-            return new MonetDbParameter();
         }
 
         /// <summary>
@@ -102,7 +106,7 @@
         /// and returns the number of rows affected.
         /// </summary>
         /// <returns></returns>
-        public int ExecuteNonQuery()
+        public override int ExecuteNonQuery()
         {
             var cnt = 0;
             using (var dr = new MonetDbDataReader(ExecuteCommand(), Connection as MonetDbConnection))
@@ -115,6 +119,54 @@
             return cnt;
         }
 
+        /// <summary>
+        /// Executes the query, and returns the first column of the first row in the resultset 
+        /// returned by the query. Extra columns or rows are ignored.
+        /// </summary>
+        /// <returns></returns>
+        public override object ExecuteScalar()
+        {
+            using (var dr = ExecuteReader())
+            {
+                return dr.Read() ? dr[0] : null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a prepared (or compiled) version of the command on the data source.
+        /// </summary>
+        public override void Prepare()
+        {
+        }
+
+        /// <summary>
+        /// Executes the <c>CommandText</c> against the <c>Connection</c> and builds an <c>IDataReader</c>.
+        /// </summary>
+        /// <param name="behavior"></param>
+        /// <returns></returns>
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        {
+            return new MonetDbDataReader(ExecuteCommand(), Connection as MonetDbConnection);
+        }
+
+        /// <summary>
+        /// Gets or sets the <c>IDbConnection</c> used by this instance of the <c>IDbCommand</c>.
+        /// </summary>
+        protected override DbConnection DbConnection
+        {
+            get { return _connection; }
+            set { _connection = (MonetDbConnection)value; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        protected override DbParameter CreateDbParameter()
+        {
+            return new MonetDbParameter();
+        }
+
         private IEnumerable<QueryResponseInfo> ExecuteCommand()
         {
             if (Connection == null || Connection.State != ConnectionState.Open)
@@ -125,25 +177,6 @@
                 ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
 
             return (Connection as MonetDbConnection).ExecuteSql(sb.ToString());
-        }
-
-        /// <summary>
-        /// Executes the <c>CommandText</c> against the <c>Connection</c> and builds an <c>IDataReader</c>.
-        /// </summary>
-        /// <param name="behavior"></param>
-        /// <returns></returns>
-        public IDataReader ExecuteReader(CommandBehavior behavior)
-        {
-            return new MonetDbDataReader(ExecuteCommand(), Connection as MonetDbConnection);
-        }
-
-        /// <summary>
-        /// Executes the <c>CommandText</c> against the <c>Connection</c> and builds an <c>IDataReader</c>.
-        /// </summary>
-        /// <returns></returns>
-        public IDataReader ExecuteReader()
-        {
-            return ExecuteReader(CommandBehavior.Default);
         }
 
         private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)
@@ -181,66 +214,5 @@
 
             return sb.Replace('"' + p.Key + '"', p.Value);
         }
-
-
-        /// <summary>
-        /// Executes the query, and returns the first column of the first row in the resultset 
-        /// returned by the query. Extra columns or rows are ignored.
-        /// </summary>
-        /// <returns></returns>
-        public object ExecuteScalar()
-        {
-            using (var dr = ExecuteReader())
-            {
-                return dr.Read() ? dr[0] : null;
-            }
-        }
-
-        private readonly MonetDbParameterCollection _parameters;
-        /// <summary>
-        /// Gets the IDataParameterCollection.
-        /// </summary>
-        public IDataParameterCollection Parameters
-        {
-            get { return _parameters; }
-        }
-
-        /// <summary>
-        /// Creates a prepared (or compiled) version of the command on the data source.
-        /// </summary>
-        public void Prepare()
-        {
-
-        }
-
-        private IDbTransaction _transaction;
-        /// <summary>
-        /// Gets or sets the transaction within which this Command object executes.
-        /// </summary>
-        public IDbTransaction Transaction
-        {
-            get { return _transaction; }
-            set { _transaction = (MonetDbTransaction)value; }
-        }
-
-        /// <summary>
-        /// Gets or sets how command results are applied to the <c>DataRow</c> when used by the 
-        /// <c>Update</c> method of a <c>MonetDbDataAdapter</c>.
-        /// </summary>
-        public UpdateRowSource UpdatedRowSource { get; set; }
-
-        #endregion
-
-        #region IDisposable Members
-
-        /// <summary>
-        /// Releases the resources used by this command.
-        /// </summary>
-        public void Dispose()
-        {
-
-        }
-
-        #endregion
     }
 }

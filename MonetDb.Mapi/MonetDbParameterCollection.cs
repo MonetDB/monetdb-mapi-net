@@ -1,23 +1,91 @@
 ﻿namespace MonetDb.Mapi
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
-    using System.Data;
+    using System.Data.Common;
     using System.Linq;
 
-    internal class MonetDbParameterCollection : List<IDbDataParameter>, IDataParameterCollection
+    internal class MonetDbParameterCollection : DbParameterCollection
     {
-        public bool Contains(string parameterName)
+        private readonly List<MonetDbParameter> list = new List<MonetDbParameter>();
+        private object syncRoot = new object();
+
+        public override int Count => this.list.Count;
+
+        public override object SyncRoot => this.syncRoot;
+
+        public override int Add(object value)
         {
-            return this.Any(param => param.ParameterName.Equals(parameterName));
+            return this.Add((MonetDbParameter)value);
         }
 
-        public int IndexOf(string parameterName)
+        public override void AddRange(Array values)
         {
-            return this.FindIndex(param => param.ParameterName.Equals(parameterName));
+            this.AddRange(values);
         }
 
-        public void RemoveAt(string parameterName)
+        public override void Clear()
+        {
+            this.list.Clear();
+        }
+
+        public override bool Contains(object value)
+        {
+            return this.list.Any(param => param.ParameterName.Equals(value));
+        }
+
+        public override bool Contains(string value)
+        {
+            return this.list.Any(param => param.ParameterName.Equals(value));
+        }
+
+        public override void CopyTo(Array array, int index)
+        {
+            this.list.CopyTo((MonetDbParameter[])array, index);
+        }
+
+        public override IEnumerator GetEnumerator()
+        {
+            return this.list.GetEnumerator();
+        }
+
+        protected override DbParameter GetParameter(int index)
+        {
+            return this.list.ElementAt(index);
+        }
+
+        protected override DbParameter GetParameter(string parameterName)
+        {
+            return this.list.First(param => param.ParameterName.Equals(parameterName));
+        }
+
+        public override int IndexOf(object value)
+        {
+            return this.list.FindIndex(param => param.ParameterName.Equals(value));
+        }
+
+        public override int IndexOf(string parameterName)
+        {
+            return this.list.FindIndex(param => param.ParameterName.Equals(parameterName));
+        }
+
+        public override void Insert(int index, object value)
+        {
+            this.list.Insert(index, (MonetDbParameter)value);
+        }
+
+        public override void Remove(object value)
+        {
+            this.list.Remove((MonetDbParameter)value);
+        }
+
+        public override void RemoveAt(int index)
+        {
+            this.list.RemoveAt(index);
+        }
+
+        public override void RemoveAt(string parameterName)
         {
             var index = this.IndexOf(parameterName);
             if (index > -1)
@@ -26,75 +94,16 @@
             }
         }
 
-        public object this[string parameterName]
+        protected override void SetParameter(int index, DbParameter value)
         {
-            get
-            {
-                return this.FirstOrDefault(param => param.ParameterName.Equals(parameterName));
-            }
-            set
-            {
-                var index = this.IndexOf(parameterName);
-                if (index > -1)
-                {
-                    this[index] = (IDbDataParameter)value;
-                }
-                else
-                {
-                    Add((IDbDataParameter)value);
-                }
-            }
-        }
-    }
-
-    internal class MonetDbParameter : IDbDataParameter
-    {
-        internal string GetProperParameter()
-        {
-            if (this.Value == DBNull.Value)
-            {
-                return "NULL";
-            }
-
-            //  If it is a string then let's sanitize the quotes and enclose the string in quotes
-            if (this.Value is string stringValue)
-            {
-                return "'" + stringValue.Replace("'", "''") + "'";
-            }
-            else if (this.Value is DateTime dateTime)
-            {
-                return "'" + dateTime.ToString("yyyy-MM-dd HH:mm:ss") + "'";
-            }
-
-            return this.Value.ToString();
+            this.RemoveAt(index);
+            this.Insert(index, (MonetDbParameter)value);
         }
 
-        #region IDbDataParameter Members
-
-        public byte Precision { get; set; }
-
-        public byte Scale { get; set; }
-
-        public int Size { get; set; }
-
-        #endregion
-
-        #region IDataParameter Members
-
-        public DbType DbType { get; set; }
-
-        public ParameterDirection Direction { get; set; }
-
-        public bool IsNullable { get; set; }
-
-        public string ParameterName { get; set; }
-
-        public string SourceColumn { get; set; }
-
-        public DataRowVersion SourceVersion { get; set; }
-
-        public object Value { get; set; }
-
-        #endregion
+        protected override void SetParameter(string parameterName, DbParameter value)
+        {
+            this.Remove(parameterName);
+            this.Add((MonetDbParameter)value);
+        }
     }
 }

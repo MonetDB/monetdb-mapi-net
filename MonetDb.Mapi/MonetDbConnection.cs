@@ -20,6 +20,7 @@ namespace MonetDb.Mapi
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Data.Common;
     using System.Diagnostics;
     using System.IO;
     using MonetDb.Mapi.Helpers;
@@ -28,7 +29,7 @@ namespace MonetDb.Mapi
     /// <summary>
     /// Represents an open connection with an MonetDB server.
     /// </summary>
-    public class MonetDbConnection : IDbConnection
+    public class MonetDbConnection : DbConnection
     {
         private string _host;
         private int _port;
@@ -42,6 +43,12 @@ namespace MonetDb.Mapi
 
         private Metadata _metaData;
         private readonly object _syncLock = new object();
+
+        private string _connectionString;
+        private ConnectionState _state;
+        private string database;
+        private string dataSource;
+        private string serverVersion;
 
         #region Constructors
 
@@ -64,40 +71,35 @@ namespace MonetDb.Mapi
                 throw new ArgumentNullException("connectionString", "connectionString cannot be null");
 
             ConnectionString = connectionString;
-            State = ConnectionState.Closed;
+            _state = ConnectionState.Closed;
         }
 
         #endregion
 
         /// <summary>
-        /// Begins a database transaction with the specified <c>IsolationLevel</c> value.
+        /// Gets the time to wait while trying to establish a 
+        /// connection before terminating the attempt and generating an error.
         /// </summary>
-        /// <param name="isolationLevel">One of the <c>IsolationLevel</c> values.</param>
-        /// <returns></returns>
-        public IDbTransaction BeginTransaction(IsolationLevel isolationLevel)
+        public override int ConnectionTimeout
         {
-            if (State != ConnectionState.Open)
-                throw new InvalidOperationException("Connection is not open");
-
-            if (isolationLevel != IsolationLevel.Serializable)
-                throw new ArgumentException(string.Format(
-                        "Isolation level {0} is not supported",
-                        isolationLevel),
-                    "isolationLevel");
-
-            return new MonetDbTransaction(this, isolationLevel);
+            get { return 60; }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public int ReplySize { get; set; }
 
         /// <summary>
-        /// Begins a database transaction.
+        /// Gets the current state of the connection.
         /// </summary>
-        /// <returns></returns>
-        public IDbTransaction BeginTransaction()
-        {
-            return BeginTransaction(IsolationLevel.Serializable);
-        }
+        public override ConnectionState State { get => _state; }
+
+        public override string Database => this.database;
+
+        public override string DataSource => this.dataSource;
+
+        public override string ServerVersion => this.serverVersion;
 
         /// <summary>
         /// Changes the current database for an open MonetDbConnection object.
@@ -105,7 +107,7 @@ namespace MonetDb.Mapi
         /// <param name="databaseName">
         /// The name of the database to use in place of the current database.
         /// </param>
-        public void ChangeDatabase(string databaseName)
+        public override void ChangeDatabase(string databaseName)
         {
             var reopen = false;
             if (State == ConnectionState.Open)
@@ -128,7 +130,7 @@ namespace MonetDb.Mapi
         /// <summary>
         /// Releases the connection back to the connection pool.
         /// </summary>
-        public void Close()
+        public override void Close()
         {
             if (this._socket != null)
             {
@@ -136,15 +138,14 @@ namespace MonetDb.Mapi
                 this._socket = null;
             }
 
-            this.State = ConnectionState.Closed;
+            this._state = ConnectionState.Closed;
         }
 
-        private string _connectionString;
         /// <summary>
         /// Gets or sets the string used to open a database.
         /// </summary>
         /// <example>host=localhost;port=50000;username=admin;password=sa;database=demo;ssl=false;poolMinimum=3;poolMaximum=20</example>
-        public string ConnectionString
+        public override string ConnectionString
         {
             get
             {
@@ -161,63 +162,26 @@ namespace MonetDb.Mapi
         }
 
         /// <summary>
-        /// Gets the time to wait while trying to establish a 
-        /// connection before terminating the attempt and generating an error.
-        /// </summary>
-        public int ConnectionTimeout
-        {
-            get { return 60; }
-        }
-
-        /// <summary>
-        /// Creates and returns a Command object associated with the connection.
-        /// </summary>
-        /// <returns></returns>
-        public IDbCommand CreateCommand()
-        {
-            return new MonetDbCommand("", this);
-        }
-
-        /// <summary>
-        /// Gets the name of the current database or the 
-        /// database to be used after a connection is opened.
-        /// </summary>
-        public string Database { get; private set; }
-
-        /// <summary>
         /// Opens a database connection with the settings 
         /// specified by the <c>ConnectionString</c> property 
         /// of the provider-specific Connection object.
         /// </summary>
-        public void Open()
+        public override void Open()
         {
             if (State == ConnectionState.Open)
                 throw new InvalidOperationException("Connection is already open");
 
-            State = ConnectionState.Connecting;
+            _state = ConnectionState.Connecting;
 
             if (string.IsNullOrEmpty(ConnectionString))
             {
-                State = ConnectionState.Closed;
+                _state = ConnectionState.Closed;
                 throw new InvalidOperationException("ConnectionString has not been set. Cannot connect to database.");
             }
 
             this._socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
 
-            State = ConnectionState.Open;
-        }
-
-        /// <summary>
-        /// Gets the current state of the connection.
-        /// </summary>
-        public ConnectionState State { get; private set; }
-
-        /// <summary>
-        /// Releases the connection back to the connection pool.
-        /// </summary>
-        public void Dispose()
-        {
-            Close();
+            _state = ConnectionState.Open;
         }
 
         ///// <summary>
@@ -256,9 +220,55 @@ namespace MonetDb.Mapi
             //return dt;
         }
 
+        internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
+        {
+            try
+            {
+#if TRACE
+                Debug.WriteLine(sql, "MonetDb");
+#endif
+                this.PrepareExecution();
+                return _socket.ExecuteSql(sql);
+            }
+            catch (IOException ex)
+            {
+                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
+                this._socket = null;
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Begins a database transaction with the specified <c>IsolationLevel</c> value.
+        /// </summary>
+        /// <param name="isolationLevel">One of the <c>IsolationLevel</c> values.</param>
+        /// <returns></returns>
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+        {
+            if (State != ConnectionState.Open)
+                throw new InvalidOperationException("Connection is not open");
+
+            if (isolationLevel != IsolationLevel.Serializable)
+                throw new ArgumentException(string.Format(
+                        "Isolation level {0} is not supported",
+                        isolationLevel),
+                    "isolationLevel");
+
+            return new MonetDbTransaction(this, isolationLevel);
+        }
+
+        /// <summary>
+        /// Creates and returns a Command object associated with the connection.
+        /// </summary>
+        /// <returns></returns>
+        protected override DbCommand CreateDbCommand()
+        {
+            return new MonetDbCommand("", this);
+        }
+
         private void ParseConnectionString(string connectionString)
         {
-            _host = _username = _password = Database = null;
+            _host = _username = _password = database = null;
             _port = 50000;
 
             foreach (var setting in connectionString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -294,7 +304,7 @@ namespace MonetDb.Mapi
                         _password = value;
                         break;
                     case "database":
-                        Database = value;
+                        database = value;
                         break;
                     case "poolminimum":
                         int tempPoolMin;
@@ -334,29 +344,11 @@ namespace MonetDb.Mapi
             }
         }
 
-        internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
-        {
-            try
-            {
-#if TRACE
-                Debug.WriteLine(sql, "MonetDb");
-#endif
-                this.PrepareExecution();
-                return _socket.ExecuteSql(sql);
-            }
-            catch (IOException ex)
-            {
-                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
-                this._socket = null;
-                throw;
-            }
-        }
-
         private void PrepareExecution()
         {
             if (this._currentReplySize != this.ReplySize)
             {
-                this._socket.ExecuteControlSql("reply_size " + this.ReplySize);
+                this._socket.ExecuteControlSql("reply_size " + this._currentReplySize);
                 this._currentReplySize = this.ReplySize;
             }
         }
