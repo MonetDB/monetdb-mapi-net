@@ -170,11 +170,15 @@
         private IEnumerable<QueryResponseInfo> ExecuteCommand()
         {
             if (Connection == null || Connection.State != ConnectionState.Open)
+            {
                 throw new MonetDbException("Connection is closed");
+            }
 
             var sb = new StringBuilder(CommandText);
             foreach (MonetDbParameter p in Parameters)
-                ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
+            {
+                this.ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
+            }
 
             return (Connection as MonetDbConnection).ExecuteSql(sb.ToString());
         }

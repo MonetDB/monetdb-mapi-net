@@ -1,13 +1,15 @@
-﻿namespace Tests
+namespace UnitTests
 {
     using System;
     using System.Data;
     using System.Linq;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MonetDb.Mapi;
 
-    [TestClass()]
+    using MonetDb.Mapi;
+    using MonetDb.Mapi.Helpers.Mapi;
+
+    [TestClass]
     public class UnitTest
     {
         private const string TestConnectionString =
@@ -172,6 +174,16 @@
                     command.ExecuteNonQuery();
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestLexer()
+        {
+            var result = Lexer.Parse("[123,2.32, -5.3,+2,-2.007e10,\"qwe asd\",true,\"qwe,asd\\\"zxc\\\"\",null]", '[', ']').ToArray();
+            Assert.AreEqual("123", result[0]);
+            Assert.AreEqual("-2.007e10", result[4]);
+            Assert.AreEqual("true", result[6]);
+            Assert.AreEqual("\"qwe,asd\\\"zxc\\\"\"", result[7]);
         }
 
         [TestMethod]

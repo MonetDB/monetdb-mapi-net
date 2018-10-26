@@ -59,7 +59,7 @@
 
         private static List<string> SplitDataInColumns(string s)
         {
-            return new List<string>(ExtractValuesList(s, "[", "]"));
+            return new List<string>(Lexer.Parse(s, '[', ']'));
         }
 
         private static List<MonetDbColumnInfo> GetColumnInfo(List<string> headerInfo)
