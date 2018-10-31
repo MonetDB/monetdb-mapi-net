@@ -179,7 +179,7 @@ namespace UnitTests
         [TestMethod]
         public void TestLexer()
         {
-            var result = Lexer.Parse("[123,2.32, -5.3,+2,-2.007e10,\"qwe asd\",true,\"qwe,asd\\\"zxc\\\"\",null]", '[', ']').ToArray();
+            var result = Lexer.Parse("[123,2.32, -5.3,+2,-2.007e10,\"qwe asd\",true,\"qwe,asd\\\"zxc\\\"\",null,32.1]", '[', ']').ToArray();
             Assert.AreEqual("123", result[0]);
             Assert.AreEqual("-2.007e10", result[4]);
             Assert.AreEqual("true", result[6]);

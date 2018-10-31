@@ -33,11 +33,13 @@
                 {
                     break;
                 }
+                // column separator
                 else if (e.Current == ',')
                 {
                     yield return val.ToString();
                     val.Clear();
                 }
+                // boolean -->
                 else if (e.Current == 't')
                 {
                     yield return ReadWord(e, "true");
@@ -54,6 +56,8 @@
                 {
                     yield return ReadWord(e, "FALSE");
                 }
+                // <-- boolean
+                // null -->
                 else if (e.Current == 'n')
                 {
                     yield return ReadWord(e, "null");
@@ -62,10 +66,13 @@
                 {
                     yield return ReadWord(e, "NULL");
                 }
+                // <-- null
+                // nothing
                 else if (e.Current == ' ' || e.Current == '\t')
                 {
                     continue;
                 }
+                // number
                 else if (e.Current >= '0' && e.Current <= '9' || e.Current == '.' || e.Current == '-' || e.Current == '+')
                 {
                     val.Append(e.Current);
@@ -73,7 +80,11 @@
                     var hasDot = e.Current == '.';
                     while (e.MoveNext())
                     {
-                        if (e.Current == ',')
+                        if (e.Current == '\t')
+                        {
+                            continue;
+                        }
+                        else if (e.Current == ',' || e.Current == end)
                         {
                             yield return val.ToString();
                             val.Clear();
@@ -111,6 +122,7 @@
                         }
                     }
                 }
+                // string
                 else if (e.Current == '"')
                 {
                     val.Append(e.Current);
@@ -131,6 +143,7 @@
                         }
                     }
                 }
+                // hmm...
                 else
                 {
                     Throw(val);
@@ -143,7 +156,7 @@
             var we = word.GetEnumerator();
             while (we.MoveNext())
             {
-                if (charEnumerator.Current != we.Current|| !charEnumerator.MoveNext())
+                if (charEnumerator.Current != we.Current || !charEnumerator.MoveNext())
                 {
                     throw new ArgumentException($"Unrecognized char '{word[0]}'");
                 }
