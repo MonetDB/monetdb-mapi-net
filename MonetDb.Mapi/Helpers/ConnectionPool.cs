@@ -58,8 +58,8 @@
 
             return null;
         }
-
-        public void Free(Socket socket)
+        
+        public void Free(Socket socket, Action callback = null)
         {
             lock (this.lockObj)
             {
@@ -69,10 +69,11 @@
                 }
 
                 this.Active.Enqueue(socket);
+                callback?.Invoke();
             }
         }
 
-        public void Remove(Socket socket)
+        public void Remove(Socket socket, Action callback = null)
         {
             lock (this.lockObj)
             {
@@ -80,6 +81,8 @@
                 {
                     throw new Exception("Socket is not busy");
                 }
+
+                callback?.Invoke();
             }
         }
 

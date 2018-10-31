@@ -3,7 +3,7 @@ namespace UnitTests
     using System;
     using System.Data;
     using System.Linq;
-
+    using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using MonetDb.Mapi;
@@ -184,6 +184,72 @@ namespace UnitTests
             Assert.AreEqual("-2.007e10", result[4]);
             Assert.AreEqual("true", result[6]);
             Assert.AreEqual("\"qwe,asd\\\"zxc\\\"\"", result[7]);
+        }
+
+        [TestMethod]
+        public void TestParallel()
+        {
+            Parallel.For(0, 100, new ParallelOptions { MaxDegreeOfParallelism = 2 }, i =>
+            {
+                using (var connection = new MonetDbConnection(TestConnectionString))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT {i} as n";
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                Assert.AreEqual(i, reader.GetInt32(0));
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        [TestMethod]
+        public void TestMultiLine()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                Assert.ThrowsException<MonetDbException>(() =>
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = @"
+SELECT 1 as n
+fail";
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            reader.Read();
+                        }
+                    }
+                });
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = @"
+SELECT 1 as n
+UNION ALL
+SELECT 2 as n";
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        reader.Read();
+                        Assert.AreEqual(1, reader.GetInt32(0));
+
+                        reader.Read();
+                        Assert.AreEqual(2, reader.GetInt32(0));
+                    }
+                }
+            }
         }
 
         [TestMethod]

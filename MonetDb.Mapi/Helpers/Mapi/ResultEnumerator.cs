@@ -112,7 +112,17 @@
                 switch (this._temp[0])
                 {
                     case '!':
-                        throw new MonetDbException("Error! " + _temp.Substring(1));
+                        var error = "Error! " + this._temp;
+                        while (true)
+                        {
+                            this._temp = this._stream.ReadLine();
+                            if (this._temp == ".")
+                            {
+                                throw new MonetDbException(error);
+                            }
+
+                            error += Environment.NewLine + this._temp.Substring(1);
+                        }
 
                     case '%':
                     case '#':

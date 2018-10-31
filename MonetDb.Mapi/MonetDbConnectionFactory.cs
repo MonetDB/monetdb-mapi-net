@@ -91,7 +91,7 @@ namespace MonetDb.Mapi
             return GetPool(host, port, username, password, database, minConn, maxConn).Dequeue();
         }
 
-        public static void CloseConnection(Socket socket, string database)
+        public static void CloseConnection(Socket socket, string database, Action callback = null)
         {
             var key = GetConnectionPoolKey(socket.Host, socket.Port, socket.Username, database);
 
@@ -101,10 +101,10 @@ namespace MonetDb.Mapi
                 pool = ConnectionPools[key];
             }
 
-            pool.Free(socket);
+            pool.Free(socket, callback);
         }
 
-        public static void RemoveConnection(Socket socket, string database)
+        public static void RemoveConnection(Socket socket, string database, Action callback = null)
         {
             var key = GetConnectionPoolKey(socket.Host, socket.Port, socket.Username, database);
 
@@ -114,7 +114,7 @@ namespace MonetDb.Mapi
                 pool = ConnectionPools[key];
             }
 
-            pool.Remove(socket);
+            pool.Remove(socket, callback);
         }
 
         private static ConnectionPool GetPool(string host, int port, string username, string password, string database, int minConn, int maxConn)

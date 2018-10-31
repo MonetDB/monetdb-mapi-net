@@ -43,6 +43,7 @@ namespace MonetDb.Mapi
 
         private Metadata _metaData;
         private readonly object _syncLock = new object();
+        private bool _disposed;
 
         private string _connectionString;
         private ConnectionState _state;
@@ -118,13 +119,19 @@ namespace MonetDb.Mapi
 
             var connectionStringChunks = ConnectionString.Split(';');
             for (var i = 0; i < connectionStringChunks.Length; i++)
+            {
                 if (connectionStringChunks[i].StartsWith("database=", StringComparison.InvariantCultureIgnoreCase))
+                {
                     connectionStringChunks[i] = "database=" + databaseName;
+                }
+            }
 
             ConnectionString = string.Join(";", connectionStringChunks);
 
             if (reopen)
+            {
                 Open();
+            }
         }
 
         /// <summary>
@@ -134,8 +141,7 @@ namespace MonetDb.Mapi
         {
             if (this._socket != null)
             {
-                MonetDbConnectionFactory.CloseConnection(this._socket, this.Database);
-                this._socket = null;
+                MonetDbConnectionFactory.CloseConnection(this._socket, this.Database, () => this._socket = null);
             }
 
             this._state = ConnectionState.Closed;
@@ -154,7 +160,9 @@ namespace MonetDb.Mapi
             set
             {
                 if (string.IsNullOrEmpty(value))
+                {
                     throw new ArgumentNullException("value", "ConnectionString cannot be null");
+                }
 
                 _connectionString = value;
                 ParseConnectionString(value);
@@ -168,20 +176,22 @@ namespace MonetDb.Mapi
         /// </summary>
         public override void Open()
         {
-            if (State == ConnectionState.Open)
+            if (this._state == ConnectionState.Open)
+            {
                 throw new InvalidOperationException("Connection is already open");
+            }
 
-            _state = ConnectionState.Connecting;
+            this._state = ConnectionState.Connecting;
 
             if (string.IsNullOrEmpty(ConnectionString))
             {
-                _state = ConnectionState.Closed;
+                this._state = ConnectionState.Closed;
                 throw new InvalidOperationException("ConnectionString has not been set. Cannot connect to database.");
             }
 
             this._socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
 
-            _state = ConnectionState.Open;
+            this._state = ConnectionState.Open;
         }
 
         ///// <summary>
@@ -232,8 +242,7 @@ namespace MonetDb.Mapi
             }
             catch (IOException ex)
             {
-                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
-                this._socket = null;
+                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database, () => this._socket = null);
                 throw;
             }
         }
@@ -264,6 +273,23 @@ namespace MonetDb.Mapi
         protected override DbCommand CreateDbCommand()
         {
             return new MonetDbCommand("", this);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (this._disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                Close();
+            }
+
+            base.Dispose(disposing);
+
+            this._disposed = true;
         }
 
         private void ParseConnectionString(string connectionString)

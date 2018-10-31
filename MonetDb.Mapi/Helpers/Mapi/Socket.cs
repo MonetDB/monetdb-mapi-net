@@ -58,8 +58,11 @@
                 SendBufferSize = 60 * 2 * 1000
             };
 
-            FromDatabase = new StreamReader(new Stream(_socket.GetStream()));
-            ToDatabase = new StreamWriter(new Stream(_socket.GetStream()));
+            this.FromDatabase = new StreamReader(new Stream(_socket.GetStream()));
+            this.ToDatabase = new StreamWriter(new Stream(_socket.GetStream()))
+            {
+                NewLine = "\n"
+            };
 
             var challenge = FromDatabase.ReadLine();
 
@@ -134,15 +137,15 @@
 
         internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
         {
-            ToDatabase.Write("s" + sql + ";\n");
-            ToDatabase.Flush();
+            this.ToDatabase.WriteLine("s" + sql + ";");
+            this.ToDatabase.Flush();
             var re = new ResultEnumerator(FromDatabase);
             return re.GetResults();
         }
 
         internal void ExecuteControlSql(string sql)
         {
-            ToDatabase.Write("X" + sql + "\nX");
+            ToDatabase.WriteLine("X" + sql);
             ToDatabase.Flush();
 
             while (true)
