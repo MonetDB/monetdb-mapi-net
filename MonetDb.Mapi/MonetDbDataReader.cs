@@ -94,8 +94,8 @@
                 var systemType = providerType.GetSystemType();
 
                 // is binary large object
-                var lobs = new[] { "blob" };
-                var isLong = lobs.Contains(providerType);
+                var blobs = new[] { "blob" };
+                var isLong = blobs.Contains(providerType);
 
                 // is nullable
                 // TODO: retreive information from sys.columns table
@@ -480,28 +480,58 @@
         /// <returns></returns>
         public override object GetValue(int i)
         {
-            if (IsDBNull(i))
+            if (this.IsDBNull(i))
+            {
                 return DBNull.Value;
+            }
+
             switch (this._responseInfo.Columns[i].DataType)
             {
+                case "tinyint":
+                    return this.GetByte(i);
+
                 case "smallint":
-                    return GetInt16(i);
-                case "boolean":
-                    return GetBoolean(i);
+                    return this.GetInt16(i);
+
                 case "int":
-                    return GetInt32(i);
+                case "integer":
+                    return this.GetInt32(i);
+
                 case "bigint":
-                    return GetInt64(i);
+                    return this.GetInt64(i);
+
+                case "boolean":
+                    return this.GetBoolean(i);
+
+                case "character":
+                case "char":
+                    return this.GetChar(i);
+
                 case "double":
-                    return GetDouble(i);
+                case "double precision":
+                case "numeric":
+                case "dec":
+                case "decimal":
+                case "float":
                 case "real":
-                    return GetFloat(0);
-                case "timestamp":
-                case "date":
+                    return this.GetFloat(i);
+
+                case "daytime":
                 case "time":
-                    return GetDateTime(i);
+                case "time with time zone":
+                case "date":
+                case "timestamp":
+                case "timestamp with time zone":
+                    return this.GetDateTime(i);
+
+                case "varchar":
+                case "text":
+                case "varchar varying":
+                case "character large object":
+                case "string":
+                case "clob":
                 default:
-                    return GetString(i);
+                    return this.GetString(i);
             }
         }
 
@@ -542,26 +572,7 @@
         /// <returns></returns>
         public override Type GetFieldType(int ordinal)
         {
-            switch (this._responseInfo.Columns[ordinal].DataType)
-            {
-                case "smallint":
-                case "int":
-                    return typeof(int);
-                case "boolean":
-                    return typeof(bool);
-                case "bigint":
-                    return typeof(long);
-                case "double":
-                    return typeof(double);
-                case "real":
-                    return typeof(float);
-                case "timestamp":
-                case "date":
-                case "time":
-                    return typeof(DateTime);
-                default:
-                    return typeof(string);
-            }
+            return this._responseInfo.Columns[ordinal].DataType.GetSystemType();
         }
 
         /// <summary>
