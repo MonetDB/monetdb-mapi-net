@@ -17,12 +17,13 @@
 
         public override int Add(object value)
         {
-            return this.Add((MonetDbParameter)value);
+            this.list.Add((MonetDbParameter)value);
+            return this.list.Count - 1;
         }
 
         public override void AddRange(Array values)
         {
-            this.AddRange(values);
+            this.list.AddRange((IEnumerable<MonetDbParameter>)values);
         }
 
         public override void Clear()
@@ -97,13 +98,13 @@
         protected override void SetParameter(int index, DbParameter value)
         {
             this.RemoveAt(index);
-            this.Insert(index, (MonetDbParameter)value);
+            this.Insert(index, value);
         }
 
         protected override void SetParameter(string parameterName, DbParameter value)
         {
             this.Remove(parameterName);
-            this.Add((MonetDbParameter)value);
+            this.Add(value);
         }
     }
 }

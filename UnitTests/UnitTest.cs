@@ -1,7 +1,9 @@
 namespace UnitTests
 {
     using System;
+    using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,6 +16,8 @@ namespace UnitTests
     {
         private const string TestConnectionString =
             "host=127.0.0.1;port=50000;username=monetdb;password=monetdb;database=demo;";
+
+        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void TestConnect()
@@ -179,11 +183,33 @@ namespace UnitTests
         [TestMethod]
         public void TestLexer()
         {
-            var result = Lexer.Parse("[123,2.32, -5.3,+2,-2.007e10,\"qwe asd\",true,\"qwe,asd\\\"zxc\\\"\",null,32.1]", '[', ']').ToArray();
-            Assert.AreEqual("123", result[0]);
-            Assert.AreEqual("-2.007e10", result[4]);
-            Assert.AreEqual("true", result[6]);
-            Assert.AreEqual("\"qwe,asd\\\"zxc\\\"\"", result[7]);
+            var combinations = GetCombination(new[] {
+                "123",
+                "2.32",
+                "-5.3",
+                "+2",
+                "-2.007e10",
+                "true",
+                "\"qwe,asd\\\"zxc\\\"\"",
+                "null",
+                "2018-08-20 10:00:00.000000"
+            }).ToArray();
+
+            var sw = Stopwatch.StartNew();
+            foreach (var item in combinations)
+            {
+                var str = string.Join(",", item);
+                var parsed = Lexer.Parse($"[{str}]", '[', ']').ToArray();
+                Assert.IsTrue(item.SequenceEqual(parsed));
+
+                str = string.Join("\t,\t", item);
+                parsed = Lexer.Parse($"[\t{str}\t]", '[', ']').ToArray();
+                Assert.IsTrue(item.SequenceEqual(parsed));
+            }
+
+            sw.Stop();
+
+            this.TestContext.WriteLine($"TestLexer: {combinations.Length} combinations, {sw.ElapsedMilliseconds} ms");
         }
 
         [TestMethod]
@@ -279,6 +305,36 @@ SELECT 2 as n";
                             Assert.AreEqual(typeof(string), schema.Columns["name"].DataType);
                             Assert.AreEqual(typeof(string), schema.Columns["value"].DataType);
                         }
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<IEnumerable<T>> GetCombination<T>(T[] list)
+        {
+            if (list.Length == 1)
+            {
+                yield return list;
+            }
+            else
+            {
+                for (int i = 0; i < list.Length; i++)
+                {
+                    var subList = new T[list.Length - 1];
+                    int si = 0;
+                    for (; si < i; si++)
+                    {
+                        subList[si] = list[si];
+                    }
+
+                    for (si++; si < list.Length; si++)
+                    {
+                        subList[si - 1] = list[si];
+                    }
+
+                    foreach (var sub in GetCombination(subList))
+                    {
+                        yield return new List<T> { list[i] }.Concat(sub);
                     }
                 }
             }

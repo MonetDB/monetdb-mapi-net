@@ -24,6 +24,7 @@
                 }
             }
 
+            string res = null;
             var val = new StringBuilder();
             var escape = false;
 
@@ -36,7 +37,12 @@
                 // column separator
                 else if (e.Current == ',')
                 {
-                    yield return val.ToString();
+                    res = val.ToString();
+                    if (!string.IsNullOrEmpty(res))
+                    {
+                        yield return res;
+                    }
+
                     val.Clear();
                 }
                 // boolean -->
@@ -73,54 +79,11 @@
                     continue;
                 }
                 // number
+                // date
                 else if (e.Current >= '0' && e.Current <= '9' || e.Current == '.' || e.Current == '-' || e.Current == '+')
                 {
-                    val.Append(e.Current);
-                    var hasE = false;
-                    var hasDot = e.Current == '.';
-                    while (e.MoveNext())
-                    {
-                        if (e.Current == '\t')
-                        {
-                            continue;
-                        }
-                        else if (e.Current == ',' || e.Current == end)
-                        {
-                            yield return val.ToString();
-                            val.Clear();
-                            break;
-                        }
-
-                        val.Append(e.Current);
-                        if (e.Current == '.')
-                        {
-                            if (hasDot)
-                            {
-                                Throw(val);
-                            }
-
-                            hasDot = true;
-                        }
-                        else if (e.Current == 'e' || e.Current == 'E')
-                        {
-                            if (hasE)
-                            {
-                                Throw(val);
-                            }
-
-                            hasE = true;
-                            e.MoveNext();
-                            val.Append(e.Current);
-                            if (!(e.Current >= '0' && e.Current <= '9' || e.Current == '-' || e.Current == '+'))
-                            {
-                                Throw(val);
-                            }
-                        }
-                        else if (e.Current < '0' || e.Current > '9')
-                        {
-                            Throw(val);
-                        }
-                    }
+                    yield return ReadNumber(e, val, end);
+                    val.Clear();
                 }
                 // string
                 else if (e.Current == '"')
@@ -148,6 +111,114 @@
                 {
                     Throw(val);
                 }
+            }
+
+            res = val.ToString();
+            if (!string.IsNullOrEmpty(res))
+            {
+                yield return res;
+            }
+        }
+
+        private static string ReadNumber(CharEnumerator e, StringBuilder val, char end)
+        {
+            val.Append(e.Current);
+            var hasE = false;
+            var hasDot = e.Current == '.';
+            while (e.MoveNext())
+            {
+                if (e.Current == '\t' || e.Current == ',' || e.Current == end)
+                {
+                    break;
+                }
+
+                val.Append(e.Current);
+                if (e.Current == '.')
+                {
+                    if (hasDot)
+                    {
+                        Throw(val);
+                    }
+
+                    hasDot = true;
+                }
+                else if (e.Current == 'e' || e.Current == 'E')
+                {
+                    if (hasE)
+                    {
+                        Throw(val);
+                    }
+
+                    hasE = true;
+                    e.MoveNext();
+                    val.Append(e.Current);
+                    if (!(e.Current >= '0' && e.Current <= '9' || e.Current == '-' || e.Current == '+'))
+                    {
+                        Throw(val);
+                    }
+                }
+                else if (e.Current == '-')
+                {
+                    ReadDateFromNumber(e, val, end);
+                    break;
+                }
+                else if (e.Current < '0' || e.Current > '9')
+                {
+                    Throw(val);
+                }
+            }
+
+            return val.ToString();
+        }
+
+        /// <summary>
+        /// 2018-08-20 10:00:00.000000
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="val">2018-</param>
+        /// <param name="end"></param>
+        private static void ReadDateFromNumber(CharEnumerator e, StringBuilder val, char end)
+        {
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // M
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // M
+
+            ConditionalRead(e, val, x => x == '-');
+
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // d
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // d
+
+            ConditionalRead(e, val, x => x == ' ');
+
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // H
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // H
+
+            ConditionalRead(e, val, x => x == ':');
+
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // m
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // m
+
+            ConditionalRead(e, val, x => x == ':');
+
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // s
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // s
+
+            ConditionalRead(e, val, x => x == '.');
+
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+            ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
+        }
+
+        private static void ConditionalRead(CharEnumerator e, StringBuilder val, Func<char,bool> cond)
+        {
+            e.MoveNext();
+            val.Append(e.Current);
+            if (!cond(e.Current))
+            {
+                Throw(val);
             }
         }
 
