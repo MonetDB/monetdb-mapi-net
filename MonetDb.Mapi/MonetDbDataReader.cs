@@ -503,10 +503,6 @@
                 case "boolean":
                     return this.GetBoolean(i);
 
-                case "character":
-                case "char":
-                    return this.GetChar(i);
-
                 case "double":
                 case "double precision":
                 case "numeric":
@@ -524,6 +520,8 @@
                 case "timestamp with time zone":
                     return this.GetDateTime(i);
 
+                case "character":
+                case "char":
                 case "varchar":
                 case "text":
                 case "varchar varying":

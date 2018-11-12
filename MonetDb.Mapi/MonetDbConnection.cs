@@ -23,6 +23,7 @@ namespace MonetDb.Mapi
     using System.Data.Common;
     using System.Diagnostics;
     using System.IO;
+
     using MonetDb.Mapi.Helpers;
     using MonetDb.Mapi.Helpers.Mapi;
 
