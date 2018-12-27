@@ -256,13 +256,22 @@ namespace MonetDb.Mapi
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
             if (State != ConnectionState.Open)
+            {
                 throw new InvalidOperationException("Connection is not open");
+            }
+
+            if (isolationLevel == IsolationLevel.Unspecified)
+            {
+                isolationLevel = IsolationLevel.Serializable;
+            }
 
             if (isolationLevel != IsolationLevel.Serializable)
+            {
                 throw new ArgumentException(string.Format(
                         "Isolation level {0} is not supported",
                         isolationLevel),
                     "isolationLevel");
+            }
 
             return new MonetDbTransaction(this, isolationLevel);
         }
