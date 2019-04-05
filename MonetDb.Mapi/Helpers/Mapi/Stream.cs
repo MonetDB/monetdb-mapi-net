@@ -30,11 +30,28 @@
 
         private int _readPos, _writePos, _readLength, _writeLength;
         private bool _lastReadBlock;
+        private bool needMore;
 
         public Stream(System.IO.Stream monetStream)
         {
             _monetStream = new BufferedStream(monetStream);
             _lastReadBlock = false;
+        }
+
+        public bool NeedMore
+        {
+            get
+            {
+                if (this.needMore)
+                {
+                    this.needMore = false;
+                    return true;
+                }
+
+                return false;
+            }
+
+            set => this.needMore = value;
         }
 
         public override bool CanRead
@@ -186,7 +203,7 @@
 
             //if this is the last block then we set the most significant bit to 1
             //if this is not the last block then we set the most significant bit to 0
-            if (last)
+            if (last && !this.NeedMore)
             {
                 blockHeader[0] = (byte)(blockSize << 1 & 0xFF | 1);
                 blockHeader[1] = (byte)(blockSize >> 7);

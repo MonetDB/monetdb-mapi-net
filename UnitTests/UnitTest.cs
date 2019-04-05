@@ -190,8 +190,8 @@ namespace UnitTests
                 "+2",
                 "-2.007e10",
                 "true",
-                "\"qwe,asd\\\"zxc\\\"\"",
                 "null",
+                "2018-08-20",
                 "2018-08-20 10:00:00.000000"
             }).ToArray();
 
@@ -235,6 +235,68 @@ namespace UnitTests
                     }
                 }
             });
+        }
+
+        [TestMethod]
+        public void TestQuotes()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT 'q \"q' as n";
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("q \"q", reader.GetString(0));
+                        }
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
+        public void LargeQueryTest()
+        {
+            var n = 50;
+            var cols = new string[n];
+            for (int i = 0; i < n; i++)
+            {
+                cols[i] = "col";
+                for (int k = 0; k <= i; k++)
+                {
+                    cols[i] += k;
+                }
+            }
+
+            var sql = "SELECT '" + string.Join("', '", cols) + "';";
+
+            var length = sql.Length;
+
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sql;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            for (int i = 0; i < n; i++)
+                            {
+                                Assert.AreEqual(cols[i], reader.GetString(i));
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         [TestMethod]

@@ -18,8 +18,11 @@
     /// </summary>
     public sealed class Socket : IDisposable
     {
-        public readonly DateTime Created;
+        private const int MAXQUERYSIZE = 1020; // 1024
+
         private TcpClient _socket;
+
+        public readonly DateTime Created;
 
         public Socket()
         {
@@ -107,7 +110,6 @@
             return FollowRedirects(redirects, username, password);
         }
 
-
         public string Database { get; set; }
 
         private StreamReader FromDatabase { get; set; }
@@ -137,8 +139,27 @@
 
         internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
         {
-            this.ToDatabase.WriteLine("s" + sql + ";");
-            this.ToDatabase.Flush();
+            this.ToDatabase.Write("s");
+            int n;
+            for (int i = 0; i < sql.Length;)
+            {
+                n = i + MAXQUERYSIZE;
+                if (n > sql.Length)
+                {
+                    this.ToDatabase.WriteLine(sql.Substring(i) + ";");
+                    this.ToDatabase.Flush();
+                    break;
+                }
+                else
+                {
+                    this.ToDatabase.Write(sql.Substring(i, MAXQUERYSIZE));
+                    ((Stream)this.ToDatabase.BaseStream).NeedMore = true;
+                    this.ToDatabase.Flush();
+                }
+
+                i = n;
+            }
+
             var re = new ResultEnumerator(FromDatabase);
             return re.GetResults();
         }

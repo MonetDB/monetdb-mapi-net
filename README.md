@@ -11,6 +11,7 @@ Supported Mapi protocols:
  - version 9 
 
 # Versions
+  - 1.4.0 Large query support
   - 1.3.6 Default Isolation Level Unspecified -> Serializable
   - 1.3.5 `BugFix` correct char dbtype
   - 1.3.4 Date parser, tests

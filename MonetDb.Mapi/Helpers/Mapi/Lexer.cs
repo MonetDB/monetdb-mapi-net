@@ -91,6 +91,12 @@
                     val.Append(e.Current);
                     while (e.MoveNext())
                     {
+                        if (e.Current == '\\' && !escape)
+                        {
+                            escape = true;
+                            continue;
+                        }
+
                         val.Append(e.Current);
                         if (escape)
                         {
@@ -99,10 +105,6 @@
                         else if (e.Current == '"')
                         {
                             break;
-                        }
-                        else if (e.Current == '\\')
-                        {
-                            escape = true;
                         }
                     }
                 }
@@ -187,7 +189,13 @@
             ConditionalRead(e, val, x => x >= '0' && x <= '9'); // d
             ConditionalRead(e, val, x => x >= '0' && x <= '9'); // d
 
-            ConditionalRead(e, val, x => x == ' ');
+            if (!ConditionalRead(e, val, x => x == ' ', false))
+            {
+                if (e.Current == '\t' || e.Current == ',' || e.Current == end)
+                {
+                    return;
+                }
+            }
 
             ConditionalRead(e, val, x => x >= '0' && x <= '9'); // H
             ConditionalRead(e, val, x => x >= '0' && x <= '9'); // H
@@ -212,14 +220,22 @@
             ConditionalRead(e, val, x => x >= '0' && x <= '9'); // i
         }
 
-        private static void ConditionalRead(CharEnumerator e, StringBuilder val, Func<char,bool> cond)
+        private static bool ConditionalRead(CharEnumerator e, StringBuilder val, Func<char, bool> cond, bool throwCond = true)
         {
             e.MoveNext();
-            val.Append(e.Current);
             if (!cond(e.Current))
             {
-                Throw(val);
+                if (throwCond)
+                {
+                    val.Append(e.Current);
+                    Throw(val);
+                }
+
+                return false;
             }
+
+            val.Append(e.Current);
+            return true;
         }
 
         private static string ReadWord(CharEnumerator charEnumerator, string word)

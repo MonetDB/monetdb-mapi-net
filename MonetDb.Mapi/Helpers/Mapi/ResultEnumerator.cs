@@ -115,12 +115,13 @@
                         var error = "Error! " + this._temp;
                         while (true)
                         {
-                            this._temp = this._stream.ReadLine();
-                            if (this._temp == ".")
+                            var line= this._stream.ReadLine();
+                            if (this._temp == "." || this._temp == line)
                             {
                                 throw new MonetDbException(error);
                             }
 
+                            this._temp = line;
                             error += Environment.NewLine + this._temp.Substring(1);
                         }
 
