@@ -25,13 +25,7 @@ namespace UnitTests
             var connection = new MonetDbConnection();
             Assert.IsTrue(connection.State == ConnectionState.Closed);
 
-            try
-            {
-                connection.Open();
-            }
-            catch (InvalidOperationException)
-            {
-            }
+            Assert.ThrowsException<InvalidOperationException>(() => connection.Open());
 
             connection = new MonetDbConnection(TestConnectionString);
             connection.Open();

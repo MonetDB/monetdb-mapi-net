@@ -115,8 +115,8 @@
                         var error = "Error! " + this._temp;
                         while (true)
                         {
-                            var line= this._stream.ReadLine();
-                            if (this._temp == "." || this._temp == line)
+                            var line = this._stream.ReadLine();
+                            if (line == "." || this._temp == line)
                             {
                                 throw new MonetDbException(error);
                             }
