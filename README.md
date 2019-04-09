@@ -11,6 +11,7 @@ Supported Mapi protocols:
  - version 9 
 
 # Versions
+ - 1.5.0 Need more support, copy from stdin test
  - 1.4.1 `BugFix` error handler
  - 1.4.0 Large query support
   - 1.3.6 Default Isolation Level Unspecified -> Serializable

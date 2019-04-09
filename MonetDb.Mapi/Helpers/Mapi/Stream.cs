@@ -23,66 +23,39 @@
     /// </summary>
     internal class Stream : System.IO.Stream
     {
-        private readonly System.IO.Stream _monetStream;
+        private readonly System.IO.Stream monetStream;
 
-        private readonly byte[] _readBlock = new byte[short.MaxValue + 3];
-        private readonly byte[] _writeBlock = new byte[short.MaxValue];
+        private readonly byte[] readBlock = new byte[short.MaxValue + 3];
+        private readonly byte[] writeBlock = new byte[short.MaxValue];
 
-        private int _readPos, _writePos, _readLength, _writeLength;
-        private bool _lastReadBlock;
-        private bool needMore;
+        private int readPos, writePos, readLength, writeLength;
+        private bool lastReadBlock;
 
         public Stream(System.IO.Stream monetStream)
         {
-            _monetStream = new BufferedStream(monetStream);
-            _lastReadBlock = false;
+            this.monetStream = new BufferedStream(monetStream);
+            this.lastReadBlock = false;
         }
 
-        public bool NeedMore
-        {
-            get
-            {
-                if (this.needMore)
-                {
-                    this.needMore = false;
-                    return true;
-                }
+        public NeedMore NeedMore { get; set; } = new NeedMore();
 
-                return false;
-            }
+        public override bool CanRead => this.monetStream.CanRead;
 
-            set => this.needMore = value;
-        }
+        public override bool CanSeek => this.monetStream.CanSeek;
 
-        public override bool CanRead
-        {
-            get { return _monetStream.CanRead; }
-        }
+        public override bool CanWrite => this.monetStream.CanWrite;
 
-        public override bool CanSeek
-        {
-            get { return _monetStream.CanSeek; }
-        }
-
-        public override bool CanWrite
-        {
-            get { return _monetStream.CanWrite; }
-        }
+        public override long Length => this.monetStream.Length;
 
         public override void Flush()
         {
             WriteNextBlock(true);
         }
 
-        public override long Length
-        {
-            get { return _monetStream.Length; }
-        }
-
         public override long Position
         {
-            get { return _monetStream.Position; }
-            set { _monetStream.Position = value; }
+            get { return monetStream.Position; }
+            set { monetStream.Position = value; }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -91,7 +64,7 @@
                 throw new ArgumentOutOfRangeException("offset",
                     "offset + count cannot be greater than the size of the buffer");
 
-            var available = _readLength - _readPos;
+            var available = readLength - readPos;
             var retval = 0;
             if (available == 0)
                 available = ReadNextBlock();
@@ -101,14 +74,14 @@
                     ? available
                     : count - retval;
 
-                Array.Copy(_readBlock, _readPos, buffer, offset, length);
+                Array.Copy(readBlock, readPos, buffer, offset, length);
 
                 retval += length;
                 offset += length;
-                _readPos += length;
-                available = _readLength - _readPos;
+                readPos += length;
+                available = readLength - readPos;
 
-                if (!_lastReadBlock && available == 0)
+                if (!lastReadBlock && available == 0)
                     available = ReadNextBlock();
             }
 
@@ -133,23 +106,23 @@
 
             while (count > 0)
             {
-                if (count < _writeBlock.Length - _writePos)
+                if (count < writeBlock.Length - writePos)
                 {
                     //in this case we won't fill up the block buffer so we can just copy the bytes
                     //to the buffer.
-                    Array.Copy(buffer, offset, _writeBlock, _writePos, count);
-                    _writeLength += count;
+                    Array.Copy(buffer, offset, writeBlock, writePos, count);
+                    writeLength += count;
                     count = 0;
                 }
                 else
                 {
                     //In this case we will fill up the block buffer, so we need to copy
                     //what we can to the block buffer, write it out, and write what's left
-                    var tempCount = _writeBlock.Length - _writePos;
-                    Array.Copy(buffer, offset, _writeBlock, _writePos, tempCount);
+                    var tempCount = writeBlock.Length - writePos;
+                    Array.Copy(buffer, offset, writeBlock, writePos, tempCount);
                     offset += tempCount;
                     count -= tempCount;
-                    _writeLength += tempCount;
+                    writeLength += tempCount;
                     WriteNextBlock(false);
                 }
             }
@@ -162,33 +135,33 @@
         {
             var blockHeader = new byte[2];
 
-            if (_monetStream.Read(blockHeader, 0, blockHeader.Length) != 2)
+            if (monetStream.Read(blockHeader, 0, blockHeader.Length) != 2)
                 throw new MonetDbException(
                     new InvalidDataException("Invalid block header length"),
                     "Error reading data from MonetDB server");
 
-            _readLength = ((blockHeader[0] & 0xFF) >> 1 |
+            readLength = ((blockHeader[0] & 0xFF) >> 1 |
                             (blockHeader[1] & 0xFF) << 7);
 
-            _lastReadBlock = (blockHeader[0] & 0x1) == 1;
+            lastReadBlock = (blockHeader[0] & 0x1) == 1;
 
             var read = 0;
 
-            while (read < _readLength)
-                read += _monetStream.Read(_readBlock, read, _readLength - read);
+            while (read < readLength)
+                read += monetStream.Read(readBlock, read, readLength - read);
 
-            _readPos = 0;
+            readPos = 0;
 
-            if (!_lastReadBlock)
-                return _readLength - _readPos;
+            if (!lastReadBlock)
+                return readLength - readPos;
 
-            if (_readLength > 0 && _readBlock[_readLength - 1] != '\n')
-                _readBlock[_readLength++] = (byte)'\n';
+            if (readLength > 0 && readBlock[readLength - 1] != '\n')
+                readBlock[readLength++] = (byte)'\n';
 
-            _readBlock[_readLength++] = (byte)DbLineType.Prompt;
-            _readBlock[_readLength++] = (byte)'\n';
+            readBlock[readLength++] = (byte)DbLineType.Prompt;
+            readBlock[readLength++] = (byte)'\n';
 
-            return _readLength - _readPos;
+            return readLength - readPos;
         }
 
         /// <summary>
@@ -199,7 +172,7 @@
         private void WriteNextBlock(bool last)
         {
             var blockHeader = new byte[2];
-            var blockSize = (short)_writeLength;
+            var blockSize = (short)writeLength;
 
             //if this is the last block then we set the most significant bit to 1
             //if this is not the last block then we set the most significant bit to 0
@@ -214,12 +187,12 @@
                 blockHeader[1] = (byte)(blockSize >> 7);
             }
 
-            _monetStream.Write(blockHeader, 0, blockHeader.Length);
-            _monetStream.Write(_writeBlock, 0, _writeLength);
-            _monetStream.Flush();
+            monetStream.Write(blockHeader, 0, blockHeader.Length);
+            monetStream.Write(writeBlock, 0, writeLength);
+            monetStream.Flush();
 
-            _writePos = 0;
-            _writeLength = 0;
+            writePos = 0;
+            writeLength = 0;
         }
     }
 }

@@ -14,28 +14,30 @@
     /// </summary>
     internal class ResultEnumerator
     {
-        private string _temp;
-        private StreamReader _stream;
+        private string temp;
+        private StreamReader stream;
+        private Socket socket;
 #if DEBUG
         private int count;
 #endif
 
-        public ResultEnumerator(StreamReader stream)
+        public ResultEnumerator(Socket socket, StreamReader stream)
         {
-            _stream = stream;
+            this.socket = socket;
+            this.stream = stream;
         }
 
         private IEnumerable<List<string>> GetRows()
         {
-            while (_temp[0] == '[')
+            while (this.temp[0] == '[')
             {
-                yield return SplitDataInColumns(_temp);
+                yield return SplitDataInColumns(this.temp);
 #if DEBUG
                 this.count++;
 #endif
-                _temp = _stream.ReadLine();
+                this.temp = stream.ReadLine();
 
-                if (_temp == null)
+                if (this.temp == null)
                     throw new IOException("Cannot read closed stream");
             }
         }
@@ -103,38 +105,47 @@
             var headerInfo = new List<string>();
             while (count > -1)
             {
-                this._temp = this._stream.ReadLine();
-                if (this._temp == null)
+                this.temp = this.stream.ReadLine();
+                if (this.temp == null)
                 {
                     throw new IOException("Unexpected end of stream");
                 }
 
-                switch (this._temp[0])
+                switch (this.temp[0])
                 {
+                    case (char)1:
+                        if (this.temp[1] != (char)2)
+                        {
+                            throw new MonetDbException("```");
+                        }
+
+                        this.socket.NeedMore = true;
+                        break;
+
                     case '!':
-                        var error = "Error! " + this._temp;
+                        var error = "Error! " + this.temp;
                         while (true)
                         {
-                            var line = this._stream.ReadLine();
-                            if (line == "." || this._temp == line)
+                            var line = this.stream.ReadLine();
+                            if (line == "." || this.temp == line)
                             {
                                 throw new MonetDbException(error);
                             }
 
-                            this._temp = line;
-                            error += Environment.NewLine + this._temp.Substring(1);
+                            this.temp = line;
+                            error += Environment.NewLine + this.temp.Substring(1);
                         }
 
                     case '%':
                     case '#':
-                        headerInfo.Add(_temp);
+                        headerInfo.Add(this.temp);
                         break;
 
                     case '&':
                         break;
 
                     case '[':
-                        var ri = this._temp.ToQueryResponseInfo();
+                        var ri = this.temp.ToQueryResponseInfo();
                         ri.Columns = GetColumnInfo(headerInfo);
                         ri.Data = GetRows();
                         yield return ri;
@@ -162,7 +173,7 @@
                 first = false;
             }
 
-            _stream = null;
+            stream = null;
         }
     }
 }

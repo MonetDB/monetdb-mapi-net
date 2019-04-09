@@ -33,6 +33,8 @@
             MapiProtocolFactory.Register<MapiProtocolVersion9>(9);
         }
 
+        public NeedMore NeedMore { get; set; } = new NeedMore();
+
         public void Close()
         {
             Dispose();
@@ -139,14 +141,18 @@
 
         internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
         {
-            this.ToDatabase.Write("s");
+            if (!this.NeedMore)
+            {
+                this.ToDatabase.Write("s");
+            }
+
             int n;
             for (int i = 0; i < sql.Length;)
             {
                 n = i + MAXQUERYSIZE;
                 if (n > sql.Length)
                 {
-                    this.ToDatabase.WriteLine(sql.Substring(i) + ";");
+                    this.ToDatabase.WriteLine(sql.Substring(i).TrimEnd(';') + ";");
                     this.ToDatabase.Flush();
                     break;
                 }
@@ -160,8 +166,7 @@
                 i = n;
             }
 
-            var re = new ResultEnumerator(FromDatabase);
-            return re.GetResults();
+            return new ResultEnumerator(this, FromDatabase).GetResults();
         }
 
         internal void ExecuteControlSql(string sql)

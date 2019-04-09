@@ -6,13 +6,13 @@
     <Company />
     <Description>MonetDb .NET mapi provider</Description>
     <Product>MonetDb.Mapi</Product>
-    <PackageProjectUrl>https://github.com/AlexandrSitdikov/monetdb-mapi-net</PackageProjectUrl>
+    <PackageProjectUrl></PackageProjectUrl>
     <PackageIconUrl>http://dev.monetdb.org/imgs/monetdb-final-120.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/AlexandrSitdikov/monetdb-mapi-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>database;DB;SQL;MonetDb</PackageTags>
-    <Version>1.4.1</Version>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/LICENSE</PackageLicenseUrl>
+    <Version>1.5.0</Version>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 

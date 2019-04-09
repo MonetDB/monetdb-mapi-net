@@ -5,6 +5,7 @@ namespace UnitTests
     using System.Data;
     using System.Diagnostics;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -288,6 +289,66 @@ namespace UnitTests
                                 Assert.AreEqual(cols[i], reader.GetString(i));
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
+        public void BulkLoadSTDINTest()
+        {
+            // random table name
+            var tableName = Guid.NewGuid().ToString();
+
+            var id = 1;
+            var data = new bool[10].ToDictionary(x => id++, x => Guid.NewGuid().ToString());
+
+            // SQL scripts
+            var createScript = string.Format("CREATE TABLE \"{0}\" (id int, t text);", tableName);
+            var copyScript = new StringBuilder($"COPY 10 records INTO \"{tableName}\" (id,t) FROM STDIN DELIMITERS ',','\\n';");
+            var selectScript = string.Format("SELECT * FROM \"{0}\";", tableName);
+            var dropScript = string.Format("DROP TABLE \"{0}\";", tableName);
+
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    // create table
+                    command.CommandText = createScript;
+                    command.ExecuteNonQuery();
+
+                    try
+                    {
+                        command.CommandText = copyScript.ToString();
+                        command.ExecuteNonQuery();
+
+                        copyScript.Clear();
+                        foreach (var row in data)
+                        {
+                            copyScript.AppendLine($"{row.Key},{row.Value}");
+                        }
+
+                        // copyScript.Append("^D");
+
+                        command.CommandText = copyScript.ToString();
+                        command.ExecuteNonQuery();
+
+                        // select from
+                        command.CommandText = selectScript;
+                        var reader = command.ExecuteReader();
+                        while (reader.Read())
+                        {
+                            id = reader.GetInt32(0);
+                            var t = reader.GetString(1);
+                        }
+                    }
+                    finally
+                    {
+                        // drop table
+                        command.CommandText = dropScript;
+                        command.ExecuteNonQuery();
                     }
                 }
             }
