@@ -46,7 +46,7 @@
             //  If it is a string then let's sanitize the quotes and enclose the string in quotes
             if (this.Value is string stringValue)
             {
-                return "'" + stringValue.Replace("'", "''") + "'";
+                return "'" + stringValue.Replace("'", "''").Replace("\\", "\\\\") + "'";
             }
             else if (this.Value is DateTime dateTime)
             {
