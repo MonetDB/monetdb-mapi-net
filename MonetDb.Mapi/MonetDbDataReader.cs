@@ -574,6 +574,22 @@
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ordinal"></param>
+        /// <returns></returns>
+        public override Type GetProviderSpecificFieldType(int ordinal)
+        {
+            var result = base.GetProviderSpecificFieldType(ordinal);
+            if (result == typeof(char))
+            {
+                result = typeof(string);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Gets the specified column by column name.
         /// </summary>
         /// <param name="name"></param>

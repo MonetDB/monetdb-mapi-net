@@ -11,8 +11,8 @@
     <RepositoryUrl>https://github.com/AlexandrSitdikov/monetdb-mapi-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>database;DB;SQL;MonetDb</PackageTags>
-    <Version>1.5.0</Version>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <Version>1.5.2</Version>
+	<PackageLicenseUrl>https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/LICENSE</PackageLicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
