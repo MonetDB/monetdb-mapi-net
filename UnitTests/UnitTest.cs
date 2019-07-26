@@ -7,6 +7,7 @@ namespace UnitTests
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using MonetDb.Mapi;
@@ -252,6 +253,31 @@ namespace UnitTests
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void ConnectionStringBuilderTest()
+        {
+            var cs = new MonetDbConnectionStringBuilder();
+            Assert.AreEqual(cs.ConnectionString, cs.ToString());
+            Assert.AreEqual(cs.ConnectionString, "HOST=localhost;PORT=50000;POOLMINIMUM=100;POOLMAXIMUM=0");
+
+            cs.Host = "localhost";
+            cs.Port = 12345;
+            cs.Username = "testUser";
+            cs.Password = "testPwd";
+            Assert.AreEqual(cs.ConnectionString, cs.ToString());
+            Assert.AreEqual(cs.ConnectionString, "HOST=localhost;PORT=12345;POOLMINIMUM=100;POOLMAXIMUM=0;USERNAME=testUser;PASSWORD=testPwd");
+
+            cs = new MonetDbConnectionStringBuilder
+            {
+                Host = "localhost",
+                Port = 12345,
+                Username = "testUser",
+                Password = "testPwd"
+            };
+            Assert.AreEqual(cs.ConnectionString, cs.ToString());
+            Assert.AreEqual(cs.ConnectionString, "HOST=localhost;PORT=12345;POOLMINIMUM=100;POOLMAXIMUM=0;USERNAME=testUser;PASSWORD=testPwd");
         }
 
         [TestMethod]
