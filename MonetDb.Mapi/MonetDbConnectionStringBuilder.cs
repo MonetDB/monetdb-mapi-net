@@ -13,6 +13,7 @@
     public class MonetDbConnectionStringBuilder : DbConnectionStringBuilder
     {
         private static Dictionary<PropertyInfo, object> defaultValues;
+        private static Dictionary<string, PropertyInfo> properties;
 
         private string database;
         private string host;
@@ -28,6 +29,8 @@
             defaultValues = typeof(MonetDbConnectionStringBuilder).GetProperties()
                 .Where(pr => pr.GetCustomAttribute<ObsoleteAttribute>() == null && pr.GetCustomAttribute<DefaultValueAttribute>() != null)
                 .ToDictionary(pr => pr, pr => pr.GetCustomAttribute<DefaultValueAttribute>().Value);
+
+            properties = typeof(MonetDbConnectionStringBuilder).GetProperties().ToDictionary(x => x.Name.ToUpper());
         }
 
         /// <summary>
@@ -45,6 +48,49 @@
         public MonetDbConnectionStringBuilder(bool useOdbcRules) : base(useOdbcRules)
         {
             this.Init();
+        }
+
+        public override object this[string keyword]
+        {
+            get
+            {
+                if (!this.TryGetValue(keyword, out var value))
+                {
+                    throw new ArgumentException("Keyword not supported: " + keyword, nameof(keyword));
+                }
+
+                return value;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    this.Remove(keyword);
+                    return;
+                }
+
+                if (properties.TryGetValue(keyword.ToUpper(), out var p))
+                {
+                    try
+                    {
+                        object convertedValue;
+                        if (p.PropertyType.GetTypeInfo().IsEnum && value is string)
+                        {
+                            convertedValue = Enum.Parse(p.PropertyType, (string)value);
+                        }
+                        else
+                        {
+                            convertedValue = Convert.ChangeType(value, p.PropertyType);
+                        }
+
+                        p.SetValue(this, convertedValue);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new ArgumentException("Couldn't set " + keyword, keyword, e);
+                    }
+                }
+            }
         }
 
         /// <summary>

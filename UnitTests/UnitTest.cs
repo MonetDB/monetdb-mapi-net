@@ -278,6 +278,15 @@ namespace UnitTests
             };
             Assert.AreEqual(cs.ConnectionString, cs.ToString());
             Assert.AreEqual(cs.ConnectionString, "HOST=localhost;PORT=12345;POOLMINIMUM=100;POOLMAXIMUM=0;USERNAME=testUser;PASSWORD=testPwd");
+            
+            cs = new MonetDbConnectionStringBuilder
+            {
+                ConnectionString = "HOST=localhost;PORT=12345;POOLMINIMUM=100;POOLMAXIMUM=0;USERNAME=testUser;PASSWORD=testPwd"
+            };
+            Assert.AreEqual("localhost", cs.Host);
+            Assert.AreEqual(12345, cs.Port);
+            Assert.AreEqual("testUser", cs.Username);
+            Assert.AreEqual("testPwd", cs.Password);
         }
 
         [TestMethod]
