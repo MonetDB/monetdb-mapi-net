@@ -93,6 +93,16 @@
             }
         }
 
+        public override bool TryGetValue(string keyword, out object value)
+        {
+            if (properties.TryGetValue(keyword.ToUpper(), out var pr))
+            {
+                keyword = pr.Name;
+            }
+
+            return base.TryGetValue(keyword, out value);
+        }
+
         /// <summary>
         /// The username to connect with
         /// </summary>
@@ -220,7 +230,6 @@
 
         private void SetValue(string propertyName, object value)
         {
-            propertyName = propertyName.ToUpper();
             if (value == null)
             {
                 base.Remove(propertyName);
