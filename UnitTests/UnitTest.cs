@@ -260,14 +260,14 @@ namespace UnitTests
         {
             var cs = new MonetDbConnectionStringBuilder();
             Assert.AreEqual(cs.ConnectionString, cs.ToString());
-            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=50000;PoolMinimum=100;PoolMaximum=0");
+            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=50000;PoolMinimum=0;PoolMaximum=100");
 
             cs.Host = "localhost";
             cs.Port = 12345;
             cs.Username = "testUser";
             cs.Password = "testPwd";
             Assert.AreEqual(cs.ConnectionString, cs.ToString());
-            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=12345;PoolMinimum=100;PoolMaximum=0;Username=testUser;Password=testPwd");
+            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=12345;PoolMinimum=0;PoolMaximum=100;Username=testUser;Password=testPwd");
 
             cs = new MonetDbConnectionStringBuilder
             {
@@ -277,11 +277,11 @@ namespace UnitTests
                 Password = "testPwd"
             };
             Assert.AreEqual(cs.ConnectionString, cs.ToString());
-            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=12345;PoolMinimum=100;PoolMaximum=0;Username=testUser;Password=testPwd");
+            Assert.AreEqual(cs.ConnectionString, "Host=localhost;Port=12345;PoolMinimum=0;PoolMaximum=100;Username=testUser;Password=testPwd");
             
             cs = new MonetDbConnectionStringBuilder
             {
-                ConnectionString = "HOST=localhost;PORT=12345;PoolMinimum=100;PoolMaximum=0;Username=testUser;Password=testPwd"
+                ConnectionString = "HOST=localhost;PORT=12345;PoolMinimum=0;PoolMaximum=100;Username=testUser;Password=testPwd"
             };
             Assert.AreEqual("localhost", cs.Host);
             Assert.AreEqual(12345, cs.Port);
