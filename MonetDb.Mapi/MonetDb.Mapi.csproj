@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,7 +11,7 @@
     <RepositoryUrl>https://github.com/AlexandrSitdikov/monetdb-mapi-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>database;DB;SQL;MonetDb</PackageTags>
-    <Version>1.6.2</Version>
+    <Version>1.6.3</Version>
 	<PackageLicenseUrl>https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/LICENSE</PackageLicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
