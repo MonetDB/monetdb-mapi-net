@@ -190,8 +190,8 @@
         /// The minimum connection pool size
         /// </summary>
         [Category("Pooling")]
-        [DefaultValue(100)]
-        [Description("The minimum connection pool size.")]
+        [DefaultValue(0)]
+        [Description("The minimum connection pool size")]
         [DisplayName("Minimum Pool Size")]
         public int PoolMinimum
         {
@@ -207,7 +207,7 @@
         /// The maximum connection pool size
         /// </summary>
         [Category("Pooling")]
-        [DefaultValue(0)]
+        [DefaultValue(100)]
         [Description("The maximum connection pool size")]
         [DisplayName("Maximum Pool Size")]
         public int PoolMaximum
