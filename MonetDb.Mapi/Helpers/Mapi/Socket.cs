@@ -17,7 +17,13 @@
     /// MapiSocket logs into the MonetDB server, since the socket is worthless if it's
     /// not logged in.
     /// </summary>
-    internal sealed class Socket : IDisposable
+    
+#if DEBUG
+    public
+#else
+        internal
+#endif
+        sealed class Socket : IDisposable
     {
         private const int MAXQUERYSIZE = 1020; // 1024
 

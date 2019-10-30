@@ -13,6 +13,7 @@ class Model {
     data
     error
     estimate
+    loading
 
     listen(fn) {
         _listener = fn;
@@ -20,6 +21,7 @@ class Model {
 
     execute(q, callback) {
         this.query = q;
+        this.loading = true;
 
         var start = new Date();
         return fetch('api/SampleData/Execute', {
@@ -41,6 +43,7 @@ class Model {
         })
             .then(response => response.json())
             .then(x => {
+                this.loading = false;
                 this.estimate = (new Date() - start) / 1000;
 
                 Object.assign(this, {
