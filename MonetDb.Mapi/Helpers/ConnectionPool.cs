@@ -20,21 +20,17 @@
 
         private readonly int min;
         private readonly int max;
-        private readonly string host;
-        private readonly int port;
-        private readonly string username;
         private readonly string password;
-        private readonly string database;
 
         public ConnectionPool(string host, int port, string username, string password, string database, int min, int max)
         {
             this.min = min;
             this.max = max;
-            this.host = host;
-            this.port = port;
-            this.username = username;
+            this.Host = host;
+            this.Port = port;
+            this.Username = username;
             this.password = password;
-            this.database = database;
+            this.Database = database;
 
             this.Init();
         }
@@ -43,6 +39,14 @@
         {
             this.Dispose();
         }
+
+        public string Host { get; set; }
+
+        public int Port { get; set; }
+
+        public string Username { get; set; }
+
+        public string Database { get; set; }
 
         public Socket Dequeue()
         {
@@ -115,17 +119,24 @@
         {
             for (var i = this.Active.Count + this.Busy.Count; i < this.min || (this.Active.Count == 0 && i < this.max); i++)
             {
+                var socket = new Socket(this);
                 try
                 {
-                    var socket = new Socket();
-                    socket.Connect(host, port, username, password, database);
+                    socket.Connect(password);
                     this.Active.Enqueue(socket);
                 }
                 catch (IOException ex)
                 {
+                    try
+                    {
+                        socket?.Dispose();
+                    }
+                    catch
+                    {
+                    }
+
                     throw new MonetDbException(ex, "Problem connecting to the MonetDB server.");
                 }
-
             }
         }
     }

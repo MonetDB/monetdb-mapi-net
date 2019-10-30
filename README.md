@@ -11,6 +11,7 @@ Supported Mapi protocols:
  - version 9 
 
 # Versions
+ - 2.0.0 Redirect connection, Web Api Client (.NET Core 2.2 + ReactJs).
  - 1.6.0 MonetDbConnectionStringBuilder
  - 1.5.0 Need more support, copy from stdin test
  - 1.4.1 `BugFix` error handler

@@ -27,9 +27,9 @@ namespace MonetDb.Mapi
     /// Handles the accounting for the connections to the database.  Handles the connection
     /// pooling of the connections.
     /// </summary>
-    public static class MonetDbConnectionFactory
+    internal static class MonetDbConnectionFactory
     {
-        private static readonly Dictionary<string, ConnectionPool> ConnectionPools = new Dictionary<string, ConnectionPool>();
+        private static readonly Dictionary<string, ConnectionPool> connectionPools = new Dictionary<string, ConnectionPool>();
         private static readonly Timer MaintenanceTimer = new Timer(1000);
 
         private static void OnMaintenanceTimerElapsed(object sender, ElapsedEventArgs e)
@@ -37,9 +37,9 @@ namespace MonetDb.Mapi
             MaintenanceTimer.Stop();
             ICollection<ConnectionPool> connections;
 
-            lock (ConnectionPools)
+            lock (connectionPools)
             {
-                connections = ConnectionPools.Values;
+                connections = connectionPools.Values;
             }
 
             foreach (var pool in connections)
@@ -93,48 +93,32 @@ namespace MonetDb.Mapi
 
         public static void CloseConnection(Socket socket, string database, Action callback = null)
         {
-            var key = GetConnectionPoolKey(socket.Host, socket.Port, socket.Username, database);
-
-            ConnectionPool pool;
-            lock (ConnectionPools)
-            {
-                pool = ConnectionPools[key];
-            }
-
-            pool.Free(socket, callback);
+            socket.Pool?.Free(socket, callback);
         }
 
         public static void RemoveConnection(Socket socket, string database, Action callback = null)
         {
-            var key = GetConnectionPoolKey(socket.Host, socket.Port, socket.Username, database);
+            socket.Pool?.Remove(socket, callback);
+        }
 
-            ConnectionPool pool;
-            lock (ConnectionPools)
-            {
-                pool = ConnectionPools[key];
-            }
-
-            pool.Remove(socket, callback);
+        public static string GetConnectionPoolKey(string host, int port, string username, string database)
+        {
+            return string.Format("{0}_{1}_{2}_{3}", host, port, username, database);
         }
 
         private static ConnectionPool GetPool(string host, int port, string username, string password, string database, int minConn, int maxConn)
         {
             var key = GetConnectionPoolKey(host, port, username, database);
             ConnectionPool pool;
-            lock (ConnectionPools)
+            lock (connectionPools)
             {
-                if (!ConnectionPools.TryGetValue(key, out pool))
+                if (!connectionPools.TryGetValue(key, out pool))
                 {
-                    pool = ConnectionPools[key] = new ConnectionPool(host, port, username, password, database, minConn, maxConn);
+                    pool = connectionPools[key] = new ConnectionPool(host, port, username, password, database, minConn, maxConn);
                 }
             }
 
             return pool;
-        }
-
-        private static string GetConnectionPoolKey(string host, int port, string username, string database)
-        {
-            return string.Format("{0}_{1}_{2}_{3}", host, port, username, database);
         }
     }
 }

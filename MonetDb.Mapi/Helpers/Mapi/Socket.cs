@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net.Sockets;
 
     using MonetDb.Mapi.Enums;
@@ -16,17 +17,28 @@
     /// MapiSocket logs into the MonetDB server, since the socket is worthless if it's
     /// not logged in.
     /// </summary>
-    public sealed class Socket : IDisposable
+    internal sealed class Socket : IDisposable
     {
         private const int MAXQUERYSIZE = 1020; // 1024
 
         private TcpClient _socket;
 
+        private StreamReader fromDatabase;
+
+        private StreamWriter toDatabase;
+
         public readonly DateTime Created;
 
-        public Socket()
+        public Socket(ConnectionPool pool)
         {
             Created = DateTime.Now;
+
+            this.Pool = pool;
+
+            this.Host = pool.Host;
+            this.Port = pool.Port;
+            this.Username = pool.Username;
+            this.Database = pool.Database;
 
             // register protocols
             MapiProtocolFactory.Register<MapiProtocolVersion8>(8);
@@ -41,6 +53,16 @@
         }
 
         /// <summary>
+        /// Connect with password.  Returns a list of any warnings from the server.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public IList<string> Connect(string password)
+        {
+            return this.Connect(this.Host, this.Port, this.Username, password, this.Database, true);
+        }
+
+        /// <summary>
         /// Connects to a given host.  Returns a list of any warnings from the server.
         /// </summary>
         /// <param name="host"></param>
@@ -49,37 +71,41 @@
         /// <param name="password"></param>
         /// <param name="database"></param>
         /// <returns></returns>
-        public IList<string> Connect(string host, int port, string username, string password, string database)
+        private IList<string> Connect(string host, int port, string username, string password, string database, bool makeConnection)
         {
-            Database = database;
-            Host = host;
-            Port = port;
-            Username = username;
+            this.Database = database;
+            this.Host = host;
+            this.Port = port;
+            this.Username = username;
 
-            _socket = new TcpClient(Host, Port)
+            if (makeConnection)
             {
-                NoDelay = true,
-                ReceiveTimeout = 60 * 2 * 1000,
-                SendBufferSize = 60 * 2 * 1000
-            };
+                this._socket = new TcpClient(this.Host, this.Port)
+                {
+                    NoDelay = true,
+                    ReceiveTimeout = 60 * 2 * 1000,
+                    SendBufferSize = 60 * 2 * 1000
+                };
 
-            this.FromDatabase = new StreamReader(new Stream(_socket.GetStream()));
-            this.ToDatabase = new StreamWriter(new Stream(_socket.GetStream()))
-            {
-                NewLine = "\n"
-            };
+                this.fromDatabase = new StreamReader(new Stream(this._socket.GetStream()));
+                this.toDatabase = new StreamWriter(new Stream(this._socket.GetStream()))
+                {
+                    NewLine = "\n"
+                };
+            }
 
-            var challenge = FromDatabase.ReadLine();
+            var challenge = fromDatabase.ReadLine();
 
             // wait till the prompt
-            FromDatabase.ReadLine();
+            this.WaitForPrompt();
+            //FromDatabase.ReadLine();
 
             var response = GetChallengeResponse(challenge, username, password, "sql", database, null);
 
-            ToDatabase.WriteLine(response);
-            ToDatabase.Flush();
+            this.toDatabase.WriteLine(response);
+            this.toDatabase.Flush();
 
-            var temp = FromDatabase.ReadLine();
+            var temp = fromDatabase.ReadLine();
             var redirects = new List<string>();
             var warnings = new List<string>();
 
@@ -92,48 +118,53 @@
                 {
                     case DbLineType.Error:
                         throw new MonetDbException(temp.Substring(1));
+
                     case DbLineType.Info:
                         warnings.Add(temp.Substring(1));
                         break;
+
                     case DbLineType.Redirect:
-                        warnings.Add(temp.Substring(1));
+                        redirects.Add(temp.Substring(1));
                         break;
                 }
 
-                temp = FromDatabase.ReadLine();
+                temp = fromDatabase.ReadLine();
             }
 
             if (redirects.Count <= 0)
+            {
+#if TRACE
+                foreach (var w in warnings)
+                {
+                    Console.WriteLine("MonetDB: " + w);
+                }
+#endif
                 return warnings;
-
-            _socket.Client.Close();
-            _socket.Close();
+            }
 
             return FollowRedirects(redirects, username, password);
         }
 
-        public string Database { get; set; }
+        public ConnectionPool Pool { get; set; }
 
-        private StreamReader FromDatabase { get; set; }
+        public string Database { get; set; }
 
         public string Host { get; private set; }
 
         public int Port { get; private set; }
 
-        private StreamWriter ToDatabase { get; set; }
-
         public string Username { get; private set; }
 
         public void Dispose()
         {
-            if (ToDatabase != null && _socket.Connected)
+            if (toDatabase != null && _socket.Connected)
             {
-                this.ToDatabase.Close();
+                this.toDatabase.Close();
             }
 
-            if (FromDatabase != null && _socket.Connected)
+            if (fromDatabase != null && _socket.Connected)
             {
-                this.FromDatabase.Close();
+                this.fromDatabase.Close();
             }
 
             this._socket.Close();
@@ -143,7 +174,7 @@
         {
             if (!this.NeedMore)
             {
-                this.ToDatabase.Write("s");
+                this.toDatabase.Write("s");
             }
 
             int n;
@@ -152,31 +183,28 @@
                 n = i + MAXQUERYSIZE;
                 if (n > sql.Length)
                 {
-                    this.ToDatabase.WriteLine(sql.Substring(i).TrimEnd(';') + ";");
-                    this.ToDatabase.Flush();
+                    this.toDatabase.WriteLine(sql.Substring(i).TrimEnd(';') + ";");
+                    this.toDatabase.Flush();
                     break;
                 }
                 else
                 {
-                    this.ToDatabase.Write(sql.Substring(i, MAXQUERYSIZE));
-                    ((Stream)this.ToDatabase.BaseStream).NeedMore = true;
-                    this.ToDatabase.Flush();
+                    this.toDatabase.Write(sql.Substring(i, MAXQUERYSIZE));
+                    ((Stream)this.toDatabase.BaseStream).NeedMore = true;
+                    this.toDatabase.Flush();
                 }
 
                 i = n;
             }
 
-            return new ResultEnumerator(this, FromDatabase).GetResults();
+            return new ResultEnumerator(this, fromDatabase).GetResults();
         }
 
-        internal void ExecuteControlSql(string sql)
+        public void WaitForPrompt()
         {
-            ToDatabase.WriteLine("X" + sql);
-            ToDatabase.Flush();
-
             while (true)
             {
-                var line = this.FromDatabase.ReadLine();
+                var line = this.fromDatabase.ReadLine();
                 if (line == null)
                 {
                     throw new IOException("Connection to server lost!");
@@ -191,6 +219,14 @@
                         throw new MonetDbException(line.Substring(1));
                 }
             }
+        }
+
+        internal void ExecuteControlSql(string sql)
+        {
+            toDatabase.WriteLine("X" + sql);
+            toDatabase.Flush();
+
+            this.WaitForPrompt();
         }
 
         /// <summary>
@@ -247,11 +283,25 @@
         /// <param name="password"></param>
         private IList<string> FollowRedirects(IReadOnlyList<string> redirectUrls, string user, string password)
         {
-            var uri = new Uri(redirectUrls[0]);
+            var suri = redirectUrls[0];
+            if (!suri.StartsWith("mapi:"))
+            {
+                throw new MonetDbException($"Unknown Mapi redirect {suri}");
+            }
+
+            var uri = new Uri(suri.Substring(5));
+            var merovingian = uri.Scheme == "merovingian";
             var host = uri.Host;
-            var port = uri.Port;
-            var database = uri.PathAndQuery.Replace(uri.Query, "");
-            return Connect(host, port, user, password, database);
+            var port = merovingian ? this.Port : uri.Port;
+            var database = uri.Query.TrimStart('?').Split('&')
+                .Select(x => x.Split('='))
+                .Where(x => x[0] == "database")
+                .Select(x => x[1])
+                .FirstOrDefault() ?? this.Database;
+#if TRACE
+            Console.WriteLine($"MonetDB: Redirect to {uri} {database}");
+#endif
+            return Connect(host, port, user, password, database, !merovingian);
         }
     }
 }
