@@ -263,7 +263,7 @@
         /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
-           this._enumerator.Dispose();
+            this._enumerator.Dispose();
             this._responeInfoEnumerator.Dispose();
         }
 
@@ -470,7 +470,8 @@
                 return null;
             }
 
-            return this._enumerator.Current[i].Substring(1,this._enumerator.Current[i].Length - 2);
+            var val = this._enumerator.Current[i];
+            return val.Substring(1, val.Length - 2);
         }
 
         /// <summary>
@@ -498,6 +499,7 @@
                     return this.GetInt32(i);
 
                 case "bigint":
+                case "hugeint":
                     return this.GetInt64(i);
 
                 case "boolean":
