@@ -5,6 +5,7 @@
     using System.Data;
     using System.Data.Common;
     using System.Text;
+    using System.Threading;
 
     using MonetDb.Mapi.Helpers.Mapi;
 
@@ -15,6 +16,7 @@
     {
         private MonetDbConnection _connection;
         private DbParameterCollection dbParameterCollection;
+        private CancellationTokenSource cancellationTokenSource;
 
         /// <summary>
         /// Initializes a new command
@@ -98,7 +100,7 @@
         /// </summary>
         public override void Cancel()
         {
-            throw new NotImplementedException("this is not implemented yet");
+            this.cancellationTokenSource?.Cancel();
         }
 
         /// <summary>
@@ -109,7 +111,7 @@
         public override int ExecuteNonQuery()
         {
             var cnt = 0;
-            using (var dr = new MonetDbDataReader(ExecuteCommand(), Connection as MonetDbConnection))
+            using (var dr = new MonetDbDataReader(this.ExecuteCommand(), Connection as MonetDbConnection))
             {
                 do
                 {
@@ -146,7 +148,7 @@
         /// <returns></returns>
         protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
         {
-            return new MonetDbDataReader(ExecuteCommand(), Connection as MonetDbConnection);
+            return new MonetDbDataReader(this.ExecuteCommand(), Connection as MonetDbConnection);
         }
 
         /// <summary>
@@ -167,6 +169,12 @@
             return new MonetDbParameter();
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            this.cancellationTokenSource = null;
+            base.Dispose(disposing);
+        }
+
         private IEnumerable<QueryResponseInfo> ExecuteCommand()
         {
             if (Connection == null || Connection.State != ConnectionState.Open)
@@ -180,7 +188,8 @@
                 this.ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
             }
 
-            return (Connection as MonetDbConnection).ExecuteSql(sb.ToString());
+            this.cancellationTokenSource = new CancellationTokenSource();
+            return (Connection as MonetDbConnection).ExecuteSql(sb.ToString(), this.cancellationTokenSource.Token);
         }
 
         private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)

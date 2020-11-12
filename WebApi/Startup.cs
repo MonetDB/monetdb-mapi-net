@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MonetDb.Mapi;
+using MonetDb.Mapi.Enums;
 
 namespace WebApi
 {
@@ -59,6 +61,8 @@ namespace WebApi
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+
+            MonetDbEnviroments.CommandCloseStrategy = CommandCloseStrategy.TerminateSession;
         }
     }
 }

@@ -53,6 +53,8 @@
 
         public NeedMore NeedMore { get; set; } = new NeedMore();
 
+        internal long ProcessId { get; set; }
+
         public void Close()
         {
             Dispose();
@@ -203,7 +205,22 @@
                 i = n;
             }
 
+            this.ProcessId = 0;
             return new ResultEnumerator(this, fromDatabase).GetResults();
+        }
+
+        public void CancelRequest()
+        {
+            if (MonetDbEnviroments.CommandCloseStrategy == CommandCloseStrategy.TerminateSession)
+            {
+                // TODO: send cancel query to MonetDb Server
+                MonetDbConnectionFactory.RemoveConnection(this, this.Database);
+                this.Dispose();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public void WaitForPrompt()

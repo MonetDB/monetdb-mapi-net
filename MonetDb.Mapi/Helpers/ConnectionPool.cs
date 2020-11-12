@@ -63,30 +63,25 @@
             return null;
         }
         
-        public void Free(Socket socket, Action callback = null)
+        public bool Free(Socket socket)
         {
             lock (this.lockObj)
             {
-                if (!this.Busy.Remove(socket))
+                if (this.Busy.Remove(socket))
                 {
-                    throw new Exception("Socket is not busy");
+                    this.Active.Enqueue(socket);
+                    return true;
                 }
 
-                this.Active.Enqueue(socket);
-                callback?.Invoke();
+                return false;
             }
         }
 
-        public void Remove(Socket socket, Action callback = null)
+        public bool Remove(Socket socket)
         {
             lock (this.lockObj)
             {
-                if (!this.Busy.Remove(socket))
-                {
-                    throw new Exception("Socket is not busy");
-                }
-
-                callback?.Invoke();
+                return this.Busy.Remove(socket);
             }
         }
 

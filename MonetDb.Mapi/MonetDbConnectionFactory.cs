@@ -91,14 +91,14 @@ namespace MonetDb.Mapi
             return GetPool(host, port, username, password, database, minConn, maxConn).Dequeue();
         }
 
-        public static void CloseConnection(Socket socket, string database, Action callback = null)
+        public static bool? CloseConnection(Socket socket, string database)
         {
-            socket.Pool?.Free(socket, callback);
+            return socket.Pool?.Free(socket);
         }
 
-        public static void RemoveConnection(Socket socket, string database, Action callback = null)
+        public static bool? RemoveConnection(Socket socket, string database)
         {
-            socket.Pool?.Remove(socket, callback);
+            return socket.Pool?.Remove(socket);
         }
 
         public static string GetConnectionPoolKey(string host, int port, string username, string database)

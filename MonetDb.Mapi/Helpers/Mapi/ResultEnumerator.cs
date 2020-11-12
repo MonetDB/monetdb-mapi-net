@@ -142,6 +142,8 @@
                         break;
 
                     case '&':
+                        var responseArray = this.temp.Substring(1).Split(' ');
+                        this.socket.ProcessId = long.Parse(responseArray[4]);
                         break;
 
                     case '[':

@@ -23,6 +23,7 @@ namespace MonetDb.Mapi
     using System.Data.Common;
     using System.Diagnostics;
     using System.IO;
+    using System.Threading;
 
     using MonetDb.Mapi.Helpers;
     using MonetDb.Mapi.Helpers.Mapi;
@@ -142,7 +143,8 @@ namespace MonetDb.Mapi
         {
             if (this._socket != null)
             {
-                MonetDbConnectionFactory.CloseConnection(this._socket, this.Database, () => this._socket = null);
+                MonetDbConnectionFactory.CloseConnection(this._socket, this.Database);
+                this._socket = null;
             }
 
             this._state = ConnectionState.Closed;
@@ -231,19 +233,22 @@ namespace MonetDb.Mapi
             //return dt;
         }
 
-        internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql)
+        internal IEnumerable<QueryResponseInfo> ExecuteSql(string sql, CancellationToken cancellationToken)
         {
             try
             {
 #if TRACE
                 Debug.WriteLine(sql, "MonetDb");
 #endif
+                cancellationToken.Register(() => this._socket.CancelRequest());
+
                 this.PrepareExecution();
                 return _socket.ExecuteSql(sql);
             }
             catch (IOException ex)
             {
-                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database, () => this._socket = null);
+                MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
+                this._socket = null;
                 throw;
             }
         }

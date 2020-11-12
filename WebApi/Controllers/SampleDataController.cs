@@ -1,19 +1,17 @@
-using System;
-using System.Collections.Generic;
-
-using Microsoft.AspNetCore.Mvc;
-
-using MonetDb.Mapi;
-
 namespace WebApi.Controllers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data.Common;
+
+    using Microsoft.AspNetCore.Mvc;
+
+    using MonetDb.Mapi;
+
     [Route("api/[controller]")]
     public class SampleDataController : Controller
     {
-        private static string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        private static DbCommand lastCommand;
 
         [HttpPost("[action]")]
         public object Execute([FromBody]Request request)
@@ -35,6 +33,8 @@ namespace WebApi.Controllers
 
                     using (var command = connection.CreateCommand())
                     {
+                        lastCommand = command;
+
                         command.CommandText = request.Query;
 
                         using (var reader = command.ExecuteReader())
@@ -68,6 +68,14 @@ namespace WebApi.Controllers
                     Error = ex.Message + Environment.NewLine + ex.StackTrace
                 };
             }
+        }
+
+        [HttpPost("[action]")]
+        [HttpGet("[action]")]
+        public bool CancelLastRequest()
+        {
+            lastCommand?.Cancel();
+            return true;
         }
 
         public class Result

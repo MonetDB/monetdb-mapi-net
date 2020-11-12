@@ -64,6 +64,10 @@ class Model {
     reload() {
         this.execute(this.query);
     }
+
+    cancel() {
+        return fetch('api/SampleData/CancelLastRequest');
+    }
 }
 
 export default new Model();

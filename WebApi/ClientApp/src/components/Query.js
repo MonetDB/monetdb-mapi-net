@@ -13,6 +13,10 @@ export class Query extends Component {
         model.execute(this.ta.value, _ => this.forceUpdate());
     }
 
+    cancel() {
+        model.cancel();
+    }
+
     render() {
         return (
             <div>
@@ -20,7 +24,9 @@ export class Query extends Component {
 
                 <br />
 
-                <Button tag={Link} className="btn btn-primary" onClick={this.execute} to="/result">Execute</Button>
+                <Button tag={Link} className="btn-success" onClick={this.execute} to="/result">Execute</Button>
+
+                <Button tag={Link} className="btn-danger" onClick={this.cancel} to="/query">Cancel</Button>
             </div>
         );
     }
