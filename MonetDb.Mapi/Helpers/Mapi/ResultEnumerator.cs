@@ -143,7 +143,7 @@
 
                     case '&':
                         var responseArray = this.temp.Substring(1).Split(' ');
-                        this.socket.ProcessId = long.Parse(responseArray[4]);
+                        this.socket.ProcessId = responseArray.Length > 3 ? long.Parse(responseArray[4]) : 0;
                         break;
 
                     case '[':
