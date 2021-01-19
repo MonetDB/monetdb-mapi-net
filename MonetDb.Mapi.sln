@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonetDb.Mapi", "MonetDb.Map
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{2341FBB4-0F47-41C7-AA60-6EA2BFFAD36D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi.Client", "WebApi\WebApi.Client.csproj", "{0248D373-2184-4B08-BFD9-F71E21DC7A40}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{2341FBB4-0F47-41C7-AA60-6EA2BFFAD36D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2341FBB4-0F47-41C7-AA60-6EA2BFFAD36D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2341FBB4-0F47-41C7-AA60-6EA2BFFAD36D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0248D373-2184-4B08-BFD9-F71E21DC7A40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0248D373-2184-4B08-BFD9-F71E21DC7A40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0248D373-2184-4B08-BFD9-F71E21DC7A40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0248D373-2184-4B08-BFD9-F71E21DC7A40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
