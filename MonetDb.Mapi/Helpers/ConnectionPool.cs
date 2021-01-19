@@ -12,7 +12,10 @@
 #else
         internal
 #endif
-        class ConnectionPool : IDisposable
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    class ConnectionPool : IDisposable
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         private readonly object lockObj = new object();
         private readonly ConcurrentQueue<Socket> Active = new ConcurrentQueue<Socket>();
@@ -22,6 +25,16 @@
         private readonly int max;
         private readonly string password;
 
+        /// <summary>
+        /// Construct a connection pool
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="database"></param>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
         public ConnectionPool(string host, int port, string username, string password, string database, int min, int max)
         {
             this.min = min;
@@ -35,19 +48,38 @@
             this.Init();
         }
 
+        /// <summary>
+        /// Dispose of ConnectionPool
+        /// </summary>
         ~ConnectionPool()
         {
             this.Dispose();
         }
 
+        /// <summary>
+        /// Host Name of connection
+        /// </summary>
         public string Host { get; set; }
 
+        /// <summary>
+        /// Port number
+        /// </summary>
         public int Port { get; set; }
 
+        /// <summary>
+        /// User Name of user
+        /// </summary>
         public string Username { get; set; }
 
+        /// <summary>
+        /// Database name 
+        /// </summary>
         public string Database { get; set; }
 
+        /// <summary>
+        /// Removes and returns the socket at the beginning of the queue.
+        /// </summary>
+        /// <returns>The first socket in the queue, null if fails</returns>
         public Socket Dequeue()
         {
             lock (this.lockObj)
@@ -63,6 +95,11 @@
             return null;
         }
         
+        /// <summary>
+        /// Free Socket Connection
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <returns></returns>
         public bool Free(Socket socket)
         {
             lock (this.lockObj)
@@ -77,6 +114,11 @@
             }
         }
 
+        /// <summary>
+        /// Remove Socket from connection pool
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <returns></returns>
         public bool Remove(Socket socket)
         {
             lock (this.lockObj)
@@ -102,6 +144,9 @@
             }
         }
 
+        /// <summary>
+        /// Dispose of socket
+        /// </summary>
         public void Dispose()
         {
             while (this.Active.TryDequeue(out var socket))
