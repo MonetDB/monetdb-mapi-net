@@ -1,6 +1,6 @@
 # Overview
 
-.NET Standart Data Provider for MonetDb
+.NET Standard Data Provider for MonetDB
 
 https://www.nuget.org/packages/MonetDb.Mapi/
 
