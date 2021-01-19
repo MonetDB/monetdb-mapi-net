@@ -245,7 +245,7 @@ namespace MonetDb.Mapi
                 this.PrepareExecution();
                 return _socket.ExecuteSql(sql);
             }
-            catch (IOException ex)
+            catch (IOException)
             {
                 MonetDbConnectionFactory.RemoveConnection(this._socket, this.Database);
                 this._socket = null;
