@@ -28,12 +28,3 @@ Supported Mapi protocols:
  - 1.2 Change implementig System.Data interfaces to extending abstract classes: System.Data.IDb... -> System.Data.Common.Db...
  - 1.1.1 double E format parsing
 
-# Web Client
-### Connection
-![Connection](https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/content/desc_connection.png "Connection")
-### Query
-![Query](https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/content/desc_query.png "Query")
-### Result
-![Result](https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/content/desc_result.png "Result")
-### Mobile result
-![Mobile](https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/content/phone_result.png "Mobile")
