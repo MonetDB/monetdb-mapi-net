@@ -33,8 +33,15 @@
 
         private StreamWriter toDatabase;
 
+        /// <summary>
+        /// Timestamp from when this socket was created
+        /// </summary>
         public readonly DateTime Created;
 
+        /// <summary>
+        /// Create a socket in the given pool
+        /// </summary>
+        /// <param name="pool"></param>
         public Socket(ConnectionPool pool)
         {
             Created = DateTime.Now;
@@ -55,6 +62,9 @@
 
         internal long ProcessId { get; set; }
 
+        /// <summary>
+        /// Close current socket
+        /// </summary>
         public void Close()
         {
             Dispose();
@@ -153,16 +163,34 @@
             return FollowRedirects(redirects, username, password);
         }
 
+        /// <summary>
+        /// Get or set the ConnectionPool for this socket
+        /// </summary>
         public ConnectionPool Pool { get; set; }
 
+        /// <summary>
+        /// Get or set the Database for this socket
+        /// </summary>
         public string Database { get; set; }
 
+        /// <summary>
+        /// Get the Host for this socket
+        /// </summary>
         public string Host { get; private set; }
 
+        /// <summary>
+        /// Get the Port for this socket
+        /// </summary>
         public int Port { get; private set; }
 
+        /// <summary>
+        /// Get the Username for this socket
+        /// </summary>
         public string Username { get; private set; }
 
+        /// <summary>
+        /// Dispose of the current socket
+        /// </summary>
         public void Dispose()
         {
             if (toDatabase != null && _socket.Connected)
@@ -209,6 +237,9 @@
             return new ResultEnumerator(this, fromDatabase).GetResults();
         }
 
+        /// <summary>
+        /// Cancel Current request
+        /// </summary>
         public void CancelRequest()
         {
             if (MonetDbEnviroments.CommandCloseStrategy == CommandCloseStrategy.TerminateSession)
@@ -223,6 +254,9 @@
             }
         }
 
+        /// <summary>
+        /// Wait for prompt when connection is lost
+        /// </summary>
         public void WaitForPrompt()
         {
             while (true)
