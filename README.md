@@ -28,3 +28,21 @@ Supported Mapi protocols:
  - 1.2 Change implementig System.Data interfaces to extending abstract classes: System.Data.IDb... -> System.Data.Common.Db...
  - 1.1.1 double E format parsing
 
+# Example
+```
+MonetDbConnection conn = new MonetDbConnection("Host=localhost;port=50000;Database=demo;username=monetdb;password=monetdb");
+conn.Open();
+
+MonetDbCommand cmd = new MonetDbCommand("SELECT * FROM foo;", conn);
+
+var reader = cmd.ExecuteReader();
+
+while(reader.Read())
+{
+    // The value in the table is an integer (INT)
+    // if it were a string, use reader.GetString(0);
+    Console.WriteLine(reader.GetInt32(0));
+}
+
+Console.ReadLine();
+```
