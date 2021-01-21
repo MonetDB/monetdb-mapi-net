@@ -98,10 +98,19 @@ namespace MonetDb.Mapi
         /// </summary>
         public override ConnectionState State { get => _state; }
 
+        /// <summary>
+        /// Name of the database
+        /// </summary>
         public override string Database => this.database;
 
+        /// <summary>
+        /// Get the datasource
+        /// </summary>
         public override string DataSource => this.dataSource;
 
+        /// <summary>
+        /// Get the current server version.
+        /// </summary>
         public override string ServerVersion => this.serverVersion;
 
         /// <summary>

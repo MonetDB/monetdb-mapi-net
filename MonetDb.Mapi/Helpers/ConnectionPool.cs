@@ -127,6 +127,9 @@
             }
         }
 
+        /// <summary>
+        /// Close all sockets of current connection
+        /// </summary>
         public void Clear()
         {
             lock (this.lockObj)
