@@ -4,6 +4,9 @@
     using System.Collections.Generic;
     using System.Text;
 
+    /// <summary>
+    /// Lexer class
+    /// </summary>
     public class Lexer
     {
         private enum StringType
@@ -13,6 +16,14 @@
             Number
         }
 
+
+        /// <summary>
+        /// Parse a statement into a IEnumerable
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
         public static IEnumerable<string> Parse(string s, char start, char end)
         {
             var e = s.GetEnumerator();
