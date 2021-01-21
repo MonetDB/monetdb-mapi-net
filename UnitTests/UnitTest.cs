@@ -431,9 +431,9 @@ SELECT 2 as n";
         }
 
         [TestMethod]
+        [Ignore]
         public void TestSchemaTable()
         {
-            return;
             var query = "SELECT * FROM env();";
 
             using (var connection = new MonetDbConnection(TestConnectionString))
