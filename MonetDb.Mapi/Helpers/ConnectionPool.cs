@@ -18,8 +18,8 @@
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         private readonly object lockObj = new object();
-        private readonly ConcurrentQueue<Socket> Active = new ConcurrentQueue<Socket>();
-        private readonly List<Socket> Busy = new List<Socket>();
+        public readonly ConcurrentQueue<Socket> Active = new ConcurrentQueue<Socket>();
+        public readonly List<Socket> Busy = new List<Socket>();
 
         private readonly int min;
         private readonly int max;
