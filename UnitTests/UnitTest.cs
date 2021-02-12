@@ -462,6 +462,15 @@ SELECT 2 as n";
             }
         }
 
+        [TestMethod] 
+        [ExpectedException(typeof(Exception))]
+        public void AssertMinimumCannotBeBiggerThanMax()
+        {
+            var modifiedConnString = TestConnectionString + "poolminimum=5;poolmaximum=1;";
+
+            var conn = new MonetDbConnection(modifiedConnString);
+        }
+
         private static IEnumerable<IEnumerable<T>> GetCombination<T>(T[] list)
         {
             if (list.Length == 1)

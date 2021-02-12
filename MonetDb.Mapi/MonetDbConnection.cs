@@ -178,6 +178,12 @@ namespace MonetDb.Mapi
 
                 _connectionString = value;
                 ParseConnectionString(value);
+
+                if(_minPoolConnections > _maxPoolConnections)
+                {
+                    throw new Exception("Minimum Pool Connections cannot be bigger than Max Pool Connections");
+                }
+
             }
         }
 
@@ -201,7 +207,7 @@ namespace MonetDb.Mapi
                 throw new InvalidOperationException("ConnectionString has not been set. Cannot connect to database.");
             }
 
-            this._socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
+            _socket = MonetDbConnectionFactory.GetConnection(_host, _port, _username, _password, Database, _minPoolConnections, _maxPoolConnections);
 
             this._state = ConnectionState.Open;
         }
@@ -365,7 +371,7 @@ namespace MonetDb.Mapi
                                 "connectionString");
                         }
 
-                        if (tempPoolMin > _minPoolConnections)
+                        if (tempPoolMin > 0)
                         {
                             _minPoolConnections = tempPoolMin;
                         }
@@ -379,9 +385,9 @@ namespace MonetDb.Mapi
                                 "connectionString");
                         }
 
-                        if (tempPoolMax > _maxPoolConnections)
+                        if (tempPoolMax > 0)
                         {
-                            _maxPoolConnections = tempPoolMax;
+                            _maxPoolConnections = tempPoolMax + 1;
                         }
                         break;
                 }

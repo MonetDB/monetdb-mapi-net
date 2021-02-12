@@ -1,9 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using MonetDb.Mapi;
 using MonetDb.Mapi.Helpers;
-using MonetDb.Mapi.Helpers.Mapi;
+using System;
 
 namespace UnitTests
 {
@@ -12,6 +10,10 @@ namespace UnitTests
     {
         public static ConnectionPool _pool;
         public static int _maxSockets = 2;
+
+        private const string TestConnectionString =
+            "host=127.0.0.1;port=50000;username=monetdb;password=monetdb;database=demo;";
+
 
         [AssemblyInitialize]
         public static void AssemblyInit(TestContext context)
@@ -41,6 +43,28 @@ namespace UnitTests
             Assert.IsTrue(_pool.Active.Count > 0);
         }
 
+        [TestMethod] 
+        public void CheckIfPoolsAreCorrectlyConstructed()
+        {
+            var modifiedConnString = TestConnectionString + "poolminimum=1;poolmaximum=16;";
+            var connections = new MonetDbConnection[16];
+
+            for (var i = 0; i < connections.Length; i++)
+            {
+                connections[i] = new MonetDbConnection(modifiedConnString);
+                connections[i].Open();
+                var cmd = new MonetDbCommand("select 1", connections[i]);
+                cmd.ExecuteScalar();
+            }
+
+            foreach (var connection in connections)
+            {
+                connection.Close();
+            }
+
+            Assert.AreEqual(16, connections.Length);
+        }
+       
         [TestMethod]
         public void CheckIfPoppedSocketIsNotInActive()
         {
@@ -56,7 +80,5 @@ namespace UnitTests
 
             Assert.IsTrue(_pool.Active.Count == 0);
         }
-
-
     }
 }
