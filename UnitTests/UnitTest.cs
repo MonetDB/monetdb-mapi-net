@@ -500,5 +500,27 @@ SELECT 2 as n";
                 }
             }
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void ZTestConnectionPoolingExceedMax()
+        {
+            var modifiedConnString = TestConnectionString + "poolminimum=1;poolmaximum=20;";
+            var connections = new MonetDbConnection[21];
+
+            for (var i = 0; i < connections.Length; i++)
+            {
+                connections[i] = new MonetDbConnection(modifiedConnString);
+                connections[i].Open();
+                var cmd = new MonetDbCommand("select 1", connections[i]);
+                cmd.ExecuteScalar();
+            }
+
+            foreach (var connection in connections)
+            {
+                connection.Close();
+            }
+        }
+
     }
 }
