@@ -387,7 +387,7 @@ namespace MonetDb.Mapi
 
                         if (tempPoolMax > 0)
                         {
-                            _maxPoolConnections = tempPoolMax + 1;
+                            _maxPoolConnections = tempPoolMax;
                         }
                         break;
                 }
