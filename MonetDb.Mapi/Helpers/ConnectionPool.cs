@@ -92,7 +92,7 @@
                 }
             }
 
-            return null;
+            throw new InvalidOperationException("Max number of connections exceeded");
         }
         
         /// <summary>
