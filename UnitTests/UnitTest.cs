@@ -431,7 +431,6 @@ SELECT 2 as n";
         }
 
         [TestMethod]
-        [Ignore]
         public void TestSchemaTable()
         {
             var query = "SELECT * FROM env();";
@@ -452,10 +451,8 @@ SELECT 2 as n";
                             var schema = reader.GetSchemaTable();
 
                             Assert.IsNotNull(schema);
-                            Assert.IsTrue(schema.Columns.Contains("name"));
-                            Assert.IsTrue(schema.Columns.Contains("value"));
-                            Assert.AreEqual(typeof(string), schema.Columns["name"].DataType);
-                            Assert.AreEqual(typeof(string), schema.Columns["value"].DataType);
+                            Assert.IsTrue((string)schema.Rows[0]["ColumnName"] == "name");
+                            Assert.IsTrue((string)schema.Rows[1]["ColumnName"] == "value");
                         }
                     }
                 }
