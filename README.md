@@ -46,3 +46,5 @@ while(reader.Read())
 
 Console.ReadLine();
 ```
+
+See the [Wiki](https://github.com/MonetDB/MonetDB-.Net/wiki) for more examples.
