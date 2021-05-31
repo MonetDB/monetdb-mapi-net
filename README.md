@@ -2,8 +2,6 @@
 
 .NET Standard Data Provider for MonetDB
 
-https://www.nuget.org/packages/MonetDb.Mapi/
-
 Tests included.
 
 Supported Mapi protocols:
