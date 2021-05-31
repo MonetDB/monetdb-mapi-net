@@ -211,17 +211,7 @@ namespace MonetDb.Mapi
 
             this._state = ConnectionState.Open;
         }
-
-        ///// <summary>
-        ///// Returns the number of rows affected in an SQL UPDATE/DELETE/INSERT query
-        ///// </summary>
-        ///// <returns></returns>
-        //internal int GetRowsAffected()
-        //{
-        //    throw new NotImplementedException("this is not implemented yet");
-        //    //return MapiLib.MapiRowsAffected(_socket);
-        //}
-
+        
         internal Metadata GetMetaData()
         {
             // create on request
