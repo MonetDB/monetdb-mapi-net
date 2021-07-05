@@ -234,6 +234,64 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestParameters()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT @param1 as m";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.DbType = DbType.Int32;
+                    param.Value = 1;
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual(1, reader.GetInt32(0));
+                        }
+                    }
+                }
+            }
+
+        }
+
+        [TestMethod]
+        public void TestQuotesWithParameter()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT 'q \"q' as n, @param1 as m";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.DbType = DbType.Int32;
+                    param.Value = 1;
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("q \"q", reader.GetString(0));
+                            Assert.AreEqual(1, reader.GetInt32(1));
+                        }
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestQuotes()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))
@@ -254,6 +312,7 @@ namespace UnitTests
                 }
             }
         }
+
 
         [TestMethod]
         public void ConnectionStringBuilderTest()

@@ -194,18 +194,11 @@
 
         private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)
         {
-            var quoteSingle = 0;
-            var quoteDouble = 0;
             var param = p.Key.ToCharArray();
             var i = 0;
             while (i < sb.Length)
             {
-                var cur = sb[i];
-                if (cur == '\'')
-                    quoteSingle++;
-                if (cur == '\"')
-                    quoteDouble++;
-                if (quoteDouble + quoteSingle == 0)
+                if (sb[i] == '@')
                 {
                     var found = true;
                     for (var j = 0; j < param.Length; j++)
