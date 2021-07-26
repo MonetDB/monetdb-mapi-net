@@ -292,6 +292,76 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestParameters2()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "select @param1, @param10";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    var param2 = command.CreateParameter();
+                    param2.ParameterName = "@param10";
+                    param2.Value = 2;
+                    command.Parameters.Add(param2);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("SomeText", reader.GetString(0));
+                            Assert.AreEqual(2, reader.GetInt32(1));
+                        }
+                    }
+                }
+            }
+        }
+
+      [TestMethod]
+        public void TestParameters3()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "select @param10, @param1";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    var param2 = command.CreateParameter();
+                    param2.ParameterName = "@param10";
+                    param2.Value = 2;
+                    command.Parameters.Add(param2);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual(2, reader.GetInt32(0));
+                            Assert.AreEqual("SomeText", reader.GetString(1));
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+
+        [TestMethod]
         public void TestQuotes()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))

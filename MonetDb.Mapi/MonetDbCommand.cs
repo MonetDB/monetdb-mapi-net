@@ -5,6 +5,7 @@
     using System.Data;
     using System.Data.Common;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
 
     using MonetDb.Mapi.Helpers.Mapi;
@@ -185,7 +186,7 @@
             var sb = new StringBuilder(CommandText);
             foreach (MonetDbParameter p in Parameters)
             {
-                this.ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
+                sb = ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
             }
 
             this.cancellationTokenSource = new CancellationTokenSource();
@@ -194,31 +195,35 @@
 
         private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)
         {
-            var param = p.Key.ToCharArray();
-            var i = 0;
-            while (i < sb.Length)
-            {
-                if (sb[i] == '@')
-                {
-                    var found = true;
-                    for (var j = 0; j < param.Length; j++)
-                        if (param[j] != sb[i + j])
-                        {
-                            found = false;
-                            break;
-                        }
 
-                    if (found)
+            var pattern = new Regex($"^{p.Key},?$");
+            string[] query = sb.ToString().Split(' ');
+
+            for(int i = 0; i <= query.Length; i++)
+            {
+                if(pattern.Match(query[i]).Success)
+                {
+                    bool comma = false;
+                    if (query[i].Contains(","))
                     {
-                        sb.Remove(i, param.Length);
-                        sb.Insert(i, p.Value);
-                        i--;
+                        query[i] = query[i].Replace(',', ' ').Trim();
+                        comma = true;
                     }
+
+                    query[i] = query[i].Replace(p.Key, p.Value);
+
+                    if(comma)
+                    {
+                        query[i] = query[i] + ",";
+                    }
+
+                    break;
                 }
-                i++;
             }
 
-            return sb.Replace('"' + p.Key + '"', p.Value);
+            StringBuilder builder = new StringBuilder();
+            return builder.Append(string.Join(" ", query));
+
         }
     }
 }
