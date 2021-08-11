@@ -292,6 +292,47 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestGetValueWithDecimalDbValue()
+        {
+            // random table name
+            var tableName = Guid.NewGuid().ToString();
+            decimal value = 0.01m;
+
+            var createScript = string.Format("CREATE TABLE \"{0}\" (value decimal);", tableName);
+            var insertScript = string.Format("INSERT INTO \"{0}\" VALUES(0.01);", tableName, value);
+            var selectScript = string.Format("SELECT * FROM \"{0}\";", tableName);
+            var dropScript = string.Format("DROP TABLE \"{0}\";", tableName);
+
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = createScript;
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = insertScript;
+
+                    command.ExecuteNonQuery();
+
+                    command.CommandText = selectScript;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual(typeof(decimal), reader.GetValue(0).GetType());
+                        }
+                    }
+
+                    command.CommandText = dropScript;
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestParameters2()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))

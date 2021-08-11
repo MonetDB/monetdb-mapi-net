@@ -507,9 +507,11 @@
 
                 case "double":
                 case "double precision":
+                    return this.GetDouble(i);
                 case "numeric":
                 case "dec":
                 case "decimal":
+                    return this.GetDecimal(i);
                 case "float":
                 case "real":
                     return this.GetFloat(i);
