@@ -199,7 +199,7 @@
             var pattern = new Regex($"^{p.Key},?$");
             string[] query = sb.ToString().Split(' ');
 
-            for(int i = 0; i <= query.Length; i++)
+            for(int i = 0; i < query.Length; i++)
             {
                 if(pattern.Match(query[i]).Success)
                 {

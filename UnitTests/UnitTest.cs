@@ -398,6 +398,33 @@ namespace UnitTests
             }
         }
 
+        [TestMethod]
+        public void TestUnusedParameter()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select 1";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual(1, reader.GetInt32(0));
+                        }
+                    }
+
+                }
+            }
+        }
 
 
 
