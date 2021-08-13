@@ -216,8 +216,6 @@
                     {
                         query[i] = query[i] + ",";
                     }
-
-                    break;
                 }
             }
 

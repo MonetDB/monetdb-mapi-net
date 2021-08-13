@@ -399,6 +399,35 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestDuplicateParameters()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select @param1, @param1";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("SomeText", reader.GetValue(0));
+                            Assert.AreEqual("SomeText", reader.GetValue(1));
+                        }
+                    }
+                   
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestUnusedParameter()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))
