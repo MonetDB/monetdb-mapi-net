@@ -399,6 +399,94 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestParametersNotBoundedByWhitespace1()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select 1 where 1 in (@param1)";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = 1;
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual(1, reader.GetInt32(0));
+                        }
+                    }
+
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestParametersNotBoundedByWhitespace2()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select @param1,@param1";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("SomeText", reader.GetValue(0));
+                            Assert.AreEqual("SomeText", reader.GetValue(1));
+                        }
+                    }
+
+                }
+            }
+        }
+
+        [TestMethod]
+        public void TestParametersNotBoundedByWhitespace3()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select @param1;";
+
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@param1";
+                    param.Value = "SomeText";
+                    command.Parameters.Add(param);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("SomeText", reader.GetValue(0));
+                        }
+                    }
+
+                }
+            }
+        }
+
+
+
+
+        [TestMethod]
         public void TestDuplicateParameters()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))

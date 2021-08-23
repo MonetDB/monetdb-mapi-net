@@ -195,33 +195,19 @@
 
         private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)
         {
-
-            var pattern = new Regex($"^{p.Key},?$");
+            var pattern = new Regex($"{p.Key},?\\b");
             string[] query = sb.ToString().Split(' ');
 
             for(int i = 0; i < query.Length; i++)
             {
-                if(pattern.Match(query[i]).Success)
+                if (pattern.Match(query[i]).Success)
                 {
-                    bool comma = false;
-                    if (query[i].Contains(","))
-                    {
-                        query[i] = query[i].Replace(',', ' ').Trim();
-                        comma = true;
-                    }
-
                     query[i] = query[i].Replace(p.Key, p.Value);
-
-                    if(comma)
-                    {
-                        query[i] = query[i] + ",";
-                    }
                 }
             }
 
             StringBuilder builder = new StringBuilder();
             return builder.Append(string.Join(" ", query));
-
         }
     }
 }
