@@ -399,6 +399,39 @@ namespace UnitTests
         }
 
         [TestMethod]
+        public void TestParameterCharactersInStringLiteral()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
+
+                using (MonetDbCommand command = (MonetDbCommand)connection.CreateCommand())
+                {
+                    command.CommandText = "select @user, @email";
+
+                    var param1 = command.CreateParameter();
+                    param1.ParameterName = "@email";
+                    param1.Value = "john@user.com";
+                    command.Parameters.Add(param1);
+
+                    var param2 = command.CreateParameter();
+                    param2.ParameterName = "@user";
+                    param2.Value = "John Smith";
+                    command.Parameters.Add(param2);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Assert.AreEqual("John Smith", reader.GetValue(0));
+                            Assert.AreEqual("john@user.com", reader.GetValue(1));
+                        }
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
         public void TestParametersNotBoundedByWhitespace1()
         {
             using (var connection = new MonetDbConnection(TestConnectionString))

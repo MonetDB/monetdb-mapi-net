@@ -184,30 +184,38 @@
             }
 
             var sb = new StringBuilder(CommandText);
-            foreach (MonetDbParameter p in Parameters)
+
+            string[] split = sb.ToString().Split(' ');
+            StringBuilder query = new StringBuilder();
+
+            if (Parameters.Count > 0)
             {
-                sb = ApplyParameter(sb, new KeyValuePair<string, string>(p.ParameterName, p.GetProperParameter()));
+                foreach (var part in split)
+                {
+                    query.Append(ApplyParameters(part, Parameters) + " ");
+                }
+
+                sb = query;
             }
 
             this.cancellationTokenSource = new CancellationTokenSource();
             return (Connection as MonetDbConnection).ExecuteSql(sb.ToString(), this.cancellationTokenSource.Token);
         }
 
-        private StringBuilder ApplyParameter(StringBuilder sb, KeyValuePair<string, string> p)
+        private string ApplyParameters(string sb, DbParameterCollection parameters)
         {
-            var pattern = new Regex($"{p.Key},?\\b");
-            string[] query = sb.ToString().Split(' ');
-
-            for(int i = 0; i < query.Length; i++)
+            foreach (MonetDbParameter p in parameters)
             {
-                if (pattern.Match(query[i]).Success)
+                var pattern = new Regex($"{p.ParameterName},?\\b");
+
+                if (pattern.Match(sb).Success)
                 {
-                    query[i] = query[i].Replace(p.Key, p.Value);
+                    sb = sb.Replace(p.ParameterName, p.GetProperParameter());
+                    break;
                 }
             }
 
-            StringBuilder builder = new StringBuilder();
-            return builder.Append(string.Join(" ", query));
+            return sb;
         }
     }
 }
