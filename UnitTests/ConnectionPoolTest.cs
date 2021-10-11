@@ -3,8 +3,10 @@ using MonetDb.Mapi;
 using MonetDb.Mapi.Helpers;
 using System;
 
+#if DEBUG
 namespace UnitTests
 {
+
     [TestClass]
     public class ConnectionPoolTest
     {
@@ -82,3 +84,4 @@ namespace UnitTests
         }
     }
 }
+#endif
