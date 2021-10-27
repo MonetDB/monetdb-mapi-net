@@ -2,24 +2,43 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Authors>Alexandr Sitdikov</Authors>
-    <Company />
-    <Description>MonetDb .NET mapi provider</Description>
-    <Product>MonetDb.Mapi</Product>
-    <PackageProjectUrl></PackageProjectUrl>
-    <PackageIconUrl>http://dev.monetdb.org/imgs/monetdb-final-120.png</PackageIconUrl>
-    <RepositoryUrl>https://github.com/AlexandrSitdikov/monetdb-mapi-net</RepositoryUrl>
+    <Authors>Alexandr Sitdikov, Mitchell Weggemans</Authors>
+    <Company>Alexandr Sitdikov, MonetDBSolutions</Company>
+    <Description>MonetDB.Net</Description>
+    <Product>MonetDB</Product>
+    <PackageProjectUrl>https://github.com/MonetDB/MonetDB-.Net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MonetDB/MonetDB-.Net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>database;DB;SQL;MonetDb</PackageTags>
-    <Version>2.1.1</Version>
-	<PackageLicenseUrl>https://raw.githubusercontent.com/AlexandrSitdikov/monetdb-mapi-net/master/LICENSE</PackageLicenseUrl>
+    <PackageTags>database;DB;SQL;MonetDB</PackageTags>
+    <Version>2.1.2</Version>
+	<PackageLicenseUrl></PackageLicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AssemblyVersion>2.1.1.0</AssemblyVersion>
     <FileVersion>2.1.1.0</FileVersion>
+    <PackageId>MonetDB</PackageId>
+    <Copyright>Alexandr Sitdikov</Copyright>
+    <AssemblyName>MonetDB</AssemblyName>
+    <RootNamespace>MonetDB</RootNamespace>
+    <PackageIcon>monetdb-logo.png</PackageIcon>
+    <PackageIconUrl />
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>bin\Release\MonetDb.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\monetdb-logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
