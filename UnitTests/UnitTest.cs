@@ -576,7 +576,26 @@ namespace UnitTests
             }
         }
 
+        [TestMethod]
+        public void TestRowsAffected()
+        {
+            using (var connection = new MonetDbConnection(TestConnectionString))
+            {
+                connection.Open();
 
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = @"CREATE TABLE RowsAffectedTest(foo INT);";
+                    command.ExecuteNonQuery();
+                    command.CommandText = @"INSERT INTO RowsAffectedTest VALUES 0;";
+
+                    int affected = command.ExecuteNonQuery();
+
+                    Assert.AreEqual(0, affected);
+                }
+
+            }
+        }
 
 
         [TestMethod]
