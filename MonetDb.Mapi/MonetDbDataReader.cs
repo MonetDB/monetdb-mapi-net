@@ -544,7 +544,12 @@
         /// <returns></returns>
         public override int GetValues(object[] values)
         {
-            throw new Exception("The method or operation is not implemented.");
+            int numCols = Math.Min(values.Length, FieldCount);
+            for(int i = 0; i < numCols; i++)
+            {
+                values[i] = this.GetValue(i);
+            }
+            return numCols;
         }
 
         /// <summary>
