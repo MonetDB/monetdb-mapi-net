@@ -21,16 +21,10 @@
         /// <param name="isolationLevel"></param>
         internal MonetDbTransaction(MonetDbConnection connection, IsolationLevel isolationLevel)
         {
-            // MonetDb only support "Serializable" isolation level
-            if (isolationLevel != IsolationLevel.Serializable)
-            {
-                throw new ArgumentException($"Isolation level {isolationLevel} is not supported", nameof(isolationLevel));
-            }
-
             this._connection = connection ?? throw new ArgumentNullException("connection");
             this._isolation = IsolationLevel;
 
-            this.Start();
+            this.Start(isolationLevel);
         }
 
         /// <summary>
@@ -93,15 +87,39 @@
         /// <summary>
         /// Start the database transaction
         /// </summary>
-        private void Start()
+        private void Start(IsolationLevel isolationLevel)
         {
             lock (_syncLock)
             {
                 CheckConnection();
-
+                string isolationLevelString = "READ COMMITTED";
+                switch (isolationLevel)
+                {
+                    case IsolationLevel.ReadCommitted:
+                        isolationLevelString = "READ COMMITTED";
+                        break;
+                    case IsolationLevel.ReadUncommitted:
+                        isolationLevelString = "READ UNCOMMITTED";
+                        break;
+                    case IsolationLevel.RepeatableRead:
+                        isolationLevelString = "REPEATABLE READ";
+                        break;
+                    case IsolationLevel.Serializable:
+                        isolationLevelString = "SERIALIZABLE";
+                        break;
+                    case IsolationLevel.Snapshot:
+                        throw new NotSupportedException("IsolationLevel.Snapshot is not supported");
+                    case IsolationLevel.Chaos:
+                        throw new NotSupportedException("IsolationLevel.Chaos is not supported");
+                    case IsolationLevel.Unspecified:
+                        isolationLevelString = "READ COMMITTED";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(isolationLevel), isolationLevel, null);
+                }
                 using (var command = _connection.CreateCommand())
                 {
-                    command.CommandText = "START TRANSACTION;";
+                    command.CommandText = $"START TRANSACTION ISOLATION LEVEL {isolationLevelString};";
                     command.ExecuteNonQuery();
                 }
             }
